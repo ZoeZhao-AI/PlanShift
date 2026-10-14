@@ -25,4 +25,33 @@ final class PersistenceControllerTests: XCTestCase {
                 persistence.container.persistentStoreCoordinator
         )
     }
+    
+    @MainActor
+    func testSQLiteStoreLoadsInAppGroup() throws {
+        let groupURL = try XCTUnwrap(
+            FileManager.default.containerURL(
+                forSecurityApplicationGroupIdentifier:
+                    PersistenceController.appGroupIdentifier
+            )
+        )
+
+        let persistence = try PersistenceController()
+        let stores = persistence.container
+            .persistentStoreCoordinator.persistentStores
+
+        XCTAssertEqual(stores.count, 1)
+
+        let store = try XCTUnwrap(stores.first)
+        let storeURL = try XCTUnwrap(store.url)
+        let expectedURL = groupURL.appendingPathComponent("PlanShift.sqlite")
+
+        XCTAssertEqual(store.type, NSSQLiteStoreType)
+        XCTAssertEqual(
+            storeURL.standardizedFileURL,
+            expectedURL.standardizedFileURL
+        )
+        XCTAssertTrue(
+            FileManager.default.fileExists(atPath: storeURL.path)
+        )
+    }
 }
