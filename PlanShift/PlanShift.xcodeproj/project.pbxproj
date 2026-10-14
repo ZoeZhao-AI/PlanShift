@@ -68,11 +68,21 @@
 			);
 			target = 9B7DAA7C307F55A50018BFE5 /* PlanShiftWidgetExtension */;
 		};
+		9B7DABD9307F5E0A0018BFE5 /* Exceptions for "PlanShift" folder in "PlanShift" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 9B7DAA4E307F52FE0018BFE5 /* PlanShift */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		9B7DAA51307F52FE0018BFE5 /* PlanShift */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				9B7DABD9307F5E0A0018BFE5 /* Exceptions for "PlanShift" folder in "PlanShift" target */,
+			);
 			path = PlanShift;
 			sourceTree = "<group>";
 		};
@@ -519,6 +529,7 @@
 				DEVELOPMENT_TEAM = 3BD5MKBV35;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PlanShift/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -553,6 +564,7 @@
 				DEVELOPMENT_TEAM = 3BD5MKBV35;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PlanShift/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
