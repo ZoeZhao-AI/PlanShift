@@ -4,7 +4,7 @@
 <dict>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.utsstudent.zhaoziying.dayshift</string>
+		<string>group.com.utsstudent.zhaoziying.planshift</string>
 	</array>
 </dict>
 </plist>
