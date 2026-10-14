@@ -4,10 +4,13 @@ import SwiftUI
 
 @main
 struct PlanShiftApp: App {
+    /// Created once and shared with every screen through the Environment.
+    @State private var router = AppRouter()
+
     var body: some Scene {
         WindowGroup {
-            // Temporary until the navigation shell is added.
-            Text("PlanShift")
+            RootView()
+                .environment(router)
         }
     }
 }
