@@ -3,14 +3,39 @@
 import SwiftUI
 
 @main
+@MainActor
 struct PlanShiftApp: App {
-    /// Created once and shared with every screen through the Environment.
     @State private var router = AppRouter()
+
+    private let persistence: Result<PersistenceController, Error>
+
+    init() {
+        do {
+            persistence = .success(try PersistenceController())
+        } catch {
+            persistence = .failure(error)
+        }
+    }
 
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .environment(router)
+            switch persistence {
+            case .success:
+                RootView()
+                    .environment(router)
+
+            case .failure:
+                ContentUnavailableView {
+                    Label(
+                        "Unable to Open PlanShift",
+                        systemImage: "exclamationmark.triangle"
+                    )
+                } description: {
+                    Text(
+                        "The local database could not be loaded. Please restart the app."
+                    )
+                }
+            }
         }
     }
 }
