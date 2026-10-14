@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		9B7DAA80307F55A50018BFE5 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9B7DAA7F307F55A50018BFE5 /* WidgetKit.framework */; };
+		9B7DAA82307F55A50018BFE5 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9B7DAA81307F55A50018BFE5 /* SwiftUI.framework */; };
+		9B7DAA8D307F55A70018BFE5 /* PlanShiftWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 9B7DAA7D307F55A50018BFE5 /* PlanShiftWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		9B7DAA5D307F53010018BFE5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -21,13 +27,48 @@
 			remoteGlobalIDString = 9B7DAA4E307F52FE0018BFE5;
 			remoteInfo = PlanShift;
 		};
+		9B7DAA8B307F55A70018BFE5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9B7DAA47307F52FE0018BFE5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9B7DAA7C307F55A50018BFE5;
+			remoteInfo = PlanShiftWidgetExtension;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		9B7DAA92307F55A70018BFE5 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				9B7DAA8D307F55A70018BFE5 /* PlanShiftWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		9B7DAA4F307F52FE0018BFE5 /* PlanShift.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PlanShift.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9B7DAA5C307F53010018BFE5 /* PlanShiftTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PlanShiftTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9B7DAA66307F53010018BFE5 /* PlanShiftUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PlanShiftUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9B7DAA7D307F55A50018BFE5 /* PlanShiftWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PlanShiftWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		9B7DAA7F307F55A50018BFE5 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		9B7DAA81307F55A50018BFE5 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		9B7DAA94307F56620018BFE5 /* PlanShiftWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PlanShiftWidgetExtension.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		9B7DAA8E307F55A70018BFE5 /* Exceptions for "PlanShiftWidget" folder in "PlanShiftWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 9B7DAA7C307F55A50018BFE5 /* PlanShiftWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		9B7DAA51307F52FE0018BFE5 /* PlanShift */ = {
@@ -43,6 +84,14 @@
 		9B7DAA69307F53010018BFE5 /* PlanShiftUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = PlanShiftUITests;
+			sourceTree = "<group>";
+		};
+		9B7DAA83307F55A50018BFE5 /* PlanShiftWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				9B7DAA8E307F55A70018BFE5 /* Exceptions for "PlanShiftWidget" folder in "PlanShiftWidgetExtension" target */,
+			);
+			path = PlanShiftWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -69,15 +118,27 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		9B7DAA7A307F55A50018BFE5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9B7DAA82307F55A50018BFE5 /* SwiftUI.framework in Frameworks */,
+				9B7DAA80307F55A50018BFE5 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		9B7DAA46307F52FE0018BFE5 = {
 			isa = PBXGroup;
 			children = (
+				9B7DAA94307F56620018BFE5 /* PlanShiftWidgetExtension.entitlements */,
 				9B7DAA51307F52FE0018BFE5 /* PlanShift */,
 				9B7DAA5F307F53010018BFE5 /* PlanShiftTests */,
 				9B7DAA69307F53010018BFE5 /* PlanShiftUITests */,
+				9B7DAA83307F55A50018BFE5 /* PlanShiftWidget */,
+				9B7DAA7E307F55A50018BFE5 /* Frameworks */,
 				9B7DAA50307F52FE0018BFE5 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -88,8 +149,18 @@
 				9B7DAA4F307F52FE0018BFE5 /* PlanShift.app */,
 				9B7DAA5C307F53010018BFE5 /* PlanShiftTests.xctest */,
 				9B7DAA66307F53010018BFE5 /* PlanShiftUITests.xctest */,
+				9B7DAA7D307F55A50018BFE5 /* PlanShiftWidgetExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		9B7DAA7E307F55A50018BFE5 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				9B7DAA7F307F55A50018BFE5 /* WidgetKit.framework */,
+				9B7DAA81307F55A50018BFE5 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -102,10 +173,12 @@
 				9B7DAA4B307F52FE0018BFE5 /* Sources */,
 				9B7DAA4C307F52FE0018BFE5 /* Frameworks */,
 				9B7DAA4D307F52FE0018BFE5 /* Resources */,
+				9B7DAA92307F55A70018BFE5 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				9B7DAA8C307F55A70018BFE5 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				9B7DAA51307F52FE0018BFE5 /* PlanShift */,
@@ -163,6 +236,28 @@
 			productReference = 9B7DAA66307F53010018BFE5 /* PlanShiftUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		9B7DAA7C307F55A50018BFE5 /* PlanShiftWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9B7DAA8F307F55A70018BFE5 /* Build configuration list for PBXNativeTarget "PlanShiftWidgetExtension" */;
+			buildPhases = (
+				9B7DAA79307F55A50018BFE5 /* Sources */,
+				9B7DAA7A307F55A50018BFE5 /* Frameworks */,
+				9B7DAA7B307F55A50018BFE5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				9B7DAA83307F55A50018BFE5 /* PlanShiftWidget */,
+			);
+			name = PlanShiftWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = PlanShiftWidgetExtension;
+			productReference = 9B7DAA7D307F55A50018BFE5 /* PlanShiftWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -184,6 +279,9 @@
 						CreatedOnToolsVersion = 26.4.1;
 						TestTargetID = 9B7DAA4E307F52FE0018BFE5;
 					};
+					9B7DAA7C307F55A50018BFE5 = {
+						CreatedOnToolsVersion = 26.4.1;
+					};
 				};
 			};
 			buildConfigurationList = 9B7DAA4A307F52FE0018BFE5 /* Build configuration list for PBXProject "PlanShift" */;
@@ -203,6 +301,7 @@
 				9B7DAA4E307F52FE0018BFE5 /* PlanShift */,
 				9B7DAA5B307F53010018BFE5 /* PlanShiftTests */,
 				9B7DAA65307F53010018BFE5 /* PlanShiftUITests */,
+				9B7DAA7C307F55A50018BFE5 /* PlanShiftWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -223,6 +322,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		9B7DAA64307F53010018BFE5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9B7DAA7B307F55A50018BFE5 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -253,6 +359,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		9B7DAA79307F55A50018BFE5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -265,6 +378,11 @@
 			isa = PBXTargetDependency;
 			target = 9B7DAA4E307F52FE0018BFE5 /* PlanShift */;
 			targetProxy = 9B7DAA67307F53010018BFE5 /* PBXContainerItemProxy */;
+		};
+		9B7DAA8C307F55A70018BFE5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9B7DAA7C307F55A50018BFE5 /* PlanShiftWidgetExtension */;
+			targetProxy = 9B7DAA8B307F55A70018BFE5 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -395,6 +513,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = PlanShift/PlanShift.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 3BD5MKBV35;
@@ -428,6 +547,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = PlanShift/PlanShift.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 3BD5MKBV35;
@@ -540,6 +660,70 @@
 			};
 			name = Release;
 		};
+		9B7DAA90307F55A70018BFE5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = PlanShiftWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3BD5MKBV35;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PlanShiftWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = PlanShiftWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.utsstudent.zhaoziying.PlanShift.PlanShiftWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		9B7DAA91307F55A70018BFE5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = PlanShiftWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3BD5MKBV35;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PlanShiftWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = PlanShiftWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.utsstudent.zhaoziying.PlanShift.PlanShiftWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -575,6 +759,15 @@
 			buildConfigurations = (
 				9B7DAA77307F53010018BFE5 /* Debug */,
 				9B7DAA78307F53010018BFE5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9B7DAA8F307F55A70018BFE5 /* Build configuration list for PBXNativeTarget "PlanShiftWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9B7DAA90307F55A70018BFE5 /* Debug */,
+				9B7DAA91307F55A70018BFE5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
