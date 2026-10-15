@@ -407,25 +407,27 @@ private struct ReplaceConfirmationContentPreview: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            if viewModel.canUndo {
-                Text("Plan updated")
-                    .font(.headline)
+            Text(
+                viewModel.replacementName
+                    ?? PreviewSamples.coastalWalk.name
+            )
+            .font(.headline)
+            .multilineTextAlignment(.center)
 
-                Button("Undo") {
-                    Task {
-                        if await viewModel.undo() {
-                            showsConfirmation = true
-                        }
-                    }
-                }
-            } else {
-                Button("Show confirmation") {
-                    showsConfirmation = true
-                }
+            Button("Show confirmation") {
+                showsConfirmation = true
             }
+            .disabled(viewModel.canUndo)
         }
+        .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AppColors.backgroundGradient)
+        .safeAreaInset(edge: .bottom) {
+            UpdatedItineraryBannerContent(
+                viewModel: viewModel,
+                onUndone: {}
+            )
+        }
         .sheet(isPresented: $showsConfirmation) {
             ReplaceConfirmationContent(
                 original: PreviewSamples.coastalWalk,
