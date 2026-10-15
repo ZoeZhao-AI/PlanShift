@@ -17,7 +17,8 @@ final class ReplaceActivityUseCaseTests: XCTestCase {
             activities: [original]
         )
         let useCase = ReplaceActivityUseCase(
-            activityRepository: repository
+            activityRepository: repository,
+            backupRepository: MockBackupRepository()
         )
 
         _ = try await useCase.execute(
@@ -55,7 +56,8 @@ final class ReplaceActivityUseCaseTests: XCTestCase {
             activities: [original]
         )
         let useCase = ReplaceActivityUseCase(
-            activityRepository: repository
+            activityRepository: repository,
+            backupRepository: MockBackupRepository()
         )
 
         let result = try await useCase.execute(
@@ -77,7 +79,8 @@ final class ReplaceActivityUseCaseTests: XCTestCase {
             activities: [stored]
         )
         let useCase = ReplaceActivityUseCase(
-            activityRepository: repository
+            activityRepository: repository,
+            backupRepository: MockBackupRepository()
         )
 
         let result = try await useCase.execute(
@@ -106,7 +109,8 @@ final class ReplaceActivityUseCaseTests: XCTestCase {
             activities: [existing]
         )
         let useCase = ReplaceActivityUseCase(
-            activityRepository: repository
+            activityRepository: repository,
+            backupRepository: MockBackupRepository()
         )
 
         do {
@@ -136,7 +140,8 @@ final class ReplaceActivityUseCaseTests: XCTestCase {
                 activities: [original]
             )
             let useCase = ReplaceActivityUseCase(
-                activityRepository: repository
+                activityRepository: repository,
+                backupRepository: MockBackupRepository()
             )
 
             do {
@@ -170,7 +175,8 @@ final class ReplaceActivityUseCaseTests: XCTestCase {
             activities: [original, other]
         )
         let useCase = ReplaceActivityUseCase(
-            activityRepository: repository
+            activityRepository: repository,
+            backupRepository: MockBackupRepository()
         )
 
         do {
@@ -206,7 +212,8 @@ final class ReplaceActivityUseCaseTests: XCTestCase {
             activities: [previous, original, next]
         )
         let useCase = ReplaceActivityUseCase(
-            activityRepository: repository
+            activityRepository: repository,
+            backupRepository: MockBackupRepository()
         )
         let place = makePlace()
 

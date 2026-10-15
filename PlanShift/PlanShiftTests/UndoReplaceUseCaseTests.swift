@@ -16,7 +16,8 @@ final class UndoReplaceUseCaseTests: XCTestCase {
             activities: [original]
         )
         let replace = ReplaceActivityUseCase(
-            activityRepository: repository
+            activityRepository: repository,
+            backupRepository: MockBackupRepository()
         )
         let undo = UndoReplaceUseCase(
             activityRepository: repository
@@ -47,7 +48,8 @@ final class UndoReplaceUseCaseTests: XCTestCase {
             activities: [original, other]
         )
         let replace = ReplaceActivityUseCase(
-            activityRepository: repository
+            activityRepository: repository,
+            backupRepository: MockBackupRepository()
         )
         let undo = UndoReplaceUseCase(
             activityRepository: repository
@@ -73,7 +75,8 @@ final class UndoReplaceUseCaseTests: XCTestCase {
             activities: [original]
         )
         let replace = ReplaceActivityUseCase(
-            activityRepository: repository
+            activityRepository: repository,
+            backupRepository: MockBackupRepository()
         )
         let undo = UndoReplaceUseCase(
             activityRepository: repository

@@ -9,9 +9,14 @@ import Foundation
 
 nonisolated struct ReplaceActivityUseCase: Sendable {
     private let activityRepository: any ActivityRepository
+    private let backupRepository: any BackupRepository
 
-    init(activityRepository: any ActivityRepository) {
+    init(
+        activityRepository: any ActivityRepository,
+        backupRepository: any BackupRepository
+    ) {
         self.activityRepository = activityRepository
+        self.backupRepository = backupRepository
     }
 
     func execute(
@@ -55,7 +60,30 @@ nonisolated struct ReplaceActivityUseCase: Sendable {
         replacement.estimatedCost = place.cost
         replacement.endTime = endTime
 
-        try await activityRepository.update(replacement)
+        let backup = BackupOption(
+            tripId: original.tripId,
+            content: .activity(original),
+            dayDate: original.date
+        )
+
+        try await backupRepository.save(backup)
+
+        do {
+            try await activityRepository.update(replacement)
+        } catch {
+            let updateError = error
+
+            do {
+                try await backupRepository.delete(id: backup.id)
+            } catch {
+                throw DomainError.replacementCleanupFailed(
+                    updateFailure: String(describing: updateError),
+                    cleanupFailure: String(describing: error)
+                )
+            }
+
+            throw updateError
+        }
 
         return original
     }

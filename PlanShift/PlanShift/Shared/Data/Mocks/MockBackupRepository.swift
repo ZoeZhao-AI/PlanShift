@@ -9,9 +9,17 @@ import Foundation
 
 actor MockBackupRepository: BackupRepository {
     private var backups: [BackupOption]
+    private let saveError: DomainError?
+    private let deleteError: DomainError?
 
-    init(backups: [BackupOption] = []) {
+    init(
+        backups: [BackupOption] = [],
+        saveError: DomainError? = nil,
+        deleteError: DomainError? = nil
+    ) {
         self.backups = backups
+        self.saveError = saveError
+        self.deleteError = deleteError
     }
 
     func fetchBackups(
@@ -23,6 +31,9 @@ actor MockBackupRepository: BackupRepository {
     }
 
     func save(_ backup: BackupOption) async throws {
+        if let saveError {
+            throw saveError
+        }
         if let index = backups.firstIndex(
             where: { $0.id == backup.id }
         ) {
@@ -33,6 +44,9 @@ actor MockBackupRepository: BackupRepository {
     }
 
     func delete(id: UUID) async throws {
+        if let deleteError {
+            throw deleteError
+        }
         backups.removeAll { $0.id == id }
     }
 
