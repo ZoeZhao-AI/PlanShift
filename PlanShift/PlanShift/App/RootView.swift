@@ -42,7 +42,7 @@ struct RootView: View {
             NavigationStack {
                 switch route {
                 case .disruptionFlow(let activity):
-                    SelectDisruptionView(activity: activity)
+                    RecommendationFlowView(activity: activity)
                 case .replaceConfirmation(let original, let alternative):
                     ReplaceConfirmationView(original: original, alternative: alternative)
                 case .useBackup(let backup):
