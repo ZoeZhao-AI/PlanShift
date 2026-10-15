@@ -94,4 +94,17 @@ final class ReplaceViewModel {
     func clearError() {
         errorMessage = nil
     }
+    
+    func proposedEndTime(
+        for activity: ItineraryActivity,
+        alternative: Place
+    ) -> Date? {
+        guard alternative.durationMinutes > 0 else {
+            return nil
+        }
+
+        return activity.startTime.addingTimeInterval(
+            TimeInterval(alternative.durationMinutes) * 60
+        )
+    }
 }
