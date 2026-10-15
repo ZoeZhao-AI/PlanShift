@@ -10,7 +10,7 @@ struct BackupsListView: View {
     /// Placeholder backup built from the preview samples.
     private let sampleBackup = BackupOption(
         tripId: PreviewSamples.trip.id,
-        place: PreviewSamples.queenVictoriaBuilding,
+        content: .place(PreviewSamples.queenVictoriaBuilding),
         dayDate: PreviewSamples.coastalWalk.date
     )
 

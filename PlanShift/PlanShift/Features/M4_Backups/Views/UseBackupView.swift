@@ -12,9 +12,23 @@ struct UseBackupView: View {
         VStack(spacing: 16) {
             Text("M4-02").font(.largeTitle.bold())
             Text("Use a Backup").font(.title2)
-            Text(backup.place.name).foregroundStyle(AppColors.textSecondary)
-            Button("Replace an Activity") {
-                router.present(.replaceConfirmation(original: PreviewSamples.coastalWalk, alternative: backup.place))
+            switch backup.content {
+            case .place(let place):
+                Text(place.name)
+                    .foregroundStyle(AppColors.textSecondary)
+
+                Button("Replace an Activity") {
+                    router.present(
+                        .replaceConfirmation(
+                            original: PreviewSamples.coastalWalk,
+                            alternative: place
+                        )
+                    )
+                }
+
+            case .activity(let activity):
+                Text(activity.name)
+                    .foregroundStyle(AppColors.textSecondary)
             }
             Button("Cancel") { router.dismissSheet() }
         }
@@ -27,6 +41,12 @@ struct UseBackupView: View {
 }
 
 #Preview {
-    UseBackupView(backup: BackupOption(tripId: PreviewSamples.trip.id, place: PreviewSamples.australianMuseum, dayDate: .now))
-        .environment(AppRouter())
+    UseBackupView(
+        backup: BackupOption(
+            tripId: PreviewSamples.trip.id,
+            content: .place(PreviewSamples.australianMuseum),
+            dayDate: .now
+        )
+    )
+    .environment(AppRouter())
 }

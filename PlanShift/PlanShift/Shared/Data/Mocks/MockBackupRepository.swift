@@ -40,8 +40,13 @@ actor MockBackupRepository: BackupRepository {
         placeId: UUID,
         tripId: UUID
     ) async throws -> Bool {
-        backups.contains {
-            $0.place.id == placeId && $0.tripId == tripId
+        backups.contains { backup in
+            guard backup.tripId == tripId,
+                  case .place(let place) = backup.content else {
+                return false
+            }
+
+            return place.id == placeId
         }
     }
 }
