@@ -68,11 +68,6 @@ enum M2Fixtures {
 
     /// Filters that exclude nothing, so a test only narrows what it is about.
     static let open = PreferenceFilters(budget: .any, maxDistance: .fiveKmPlus, duration: .oneToTwoHours, setting: .any)
-}
 
-/// A `PlaceRepository` that returns exactly the given places.
-struct StubPlaceRepository: PlaceRepository {
-    let places: [Place]
-    func fetchAllPlaces() async throws -> [Place] { places }
-    func importBundledPlacesIfNeeded() async throws {}
+    static var ranker: AlternativeRanker { AlternativeRanker(calendar: calendar) }
 }
