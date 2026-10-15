@@ -53,7 +53,7 @@ PlanShift/PlanShift/
 │   │   ├── Errors/           DomainError
 │   │   └── Repositories/     TripRepository, ActivityRepository, PlaceRepository, BackupRepository
 │   ├── Data/                 (later)
-│   │   ├── Persistence/      (later, M5) PersistenceController, .xcdatamodeld
+│   │   ├── Persistence/      (later, M3) PersistenceController, .xcdatamodeld
 │   │   ├── Repositories/     (later, M1/M2/M4) Core Data implementations + mappers
 │   │   └── Mocks/            (later, M3) in-memory repositories
 │   ├── DesignSystem/         AppColors (+ components later)
@@ -63,7 +63,7 @@ PlanShift/PlanShift/
 │   ├── M2_Recommendations/   Views/ · ViewModels/ (later) · UseCases/ (later)
 │   ├── M3_Replace/           Views/ · ViewModels/ (later) · UseCases/ (later)
 │   ├── M4_Backups/           Views/ · ViewModels/ (later) · UseCases/ (later)
-│   └── M5_Settings/          Views/ · ViewModels/ (later) · UseCases/ (later)
+│   └── M5_Settings/          Views/ · ViewModels/ (later) · UseCases/ (later) · SettingsView is owned by M3
 └── Resources/                (later, M2) places.json
 ```
 
@@ -77,9 +77,9 @@ New files under `PlanShift/PlanShift/` join the app target automatically. Don't 
 |---|---|---|---|
 | M1 | Itinerary | M1-01 Itinerary · M1-02 Add/Edit Activity · M1-03 Activity Detail · M1-04 Delete Confirmation · M1-05 Empty State · M1-06 Create Trip | TBD |
 | M2 | Recommendations | M2-01 Select Disruption · M2-02 Preference Filters · M2-03 Ranked Alternatives · M2-04 No Results | TBD |
-| M3 | Replace | M3-01 Replace Confirmation · M3-02 Updated Itinerary Banner | TBD |
+| M3 | Replace & Settings | M3-01 Replace Confirmation · M3-02 Updated Itinerary Banner · M5-06 Settings | TBD |
 | M4 | Backups | M4-01 Backups List · M4-02 Use a Backup · M4-03 Empty State · M4-04 Duplicate Toast | TBD |
-| M5 | Settings & Widget | M5-04 Location Pre-prompt · M5-05 Location Denied Banner · M5-06 Settings · Widget | TBD |
+| M5 | Widget & Location | M5-04 Location Pre-prompt · M5-05 Location Denied Banner · Widget | TBD |
 
 ## What each owner builds
 
@@ -87,11 +87,11 @@ Each owner replaces their placeholder screens and writes their own view models, 
 
 - **M1 – Itinerary:** `TripEntity` and `ActivityEntity` in the Core Data model; `CoreDataTripRepository` and `CoreDataActivityRepository`; the tab and itinerary screens; use cases such as CreateTrip, AddActivity, UpdateActivity, DeleteActivity, FetchItinerary.
 - **M2 – Recommendations:** `PlaceEntity`; the bundled places dataset (`Resources/places.json`, 40–60 Sydney places) and `importBundledPlacesIfNeeded`; `CoreDataPlaceRepository`; disruption defaults and the ranking logic (filter, score, top 3 with reasons).
-- **M3 – Replace:** the in-memory mock repositories (all four protocols) and the unit test target setup; ReplaceActivity and UndoReplace.
+- **M3 – Replace & Settings:** `PersistenceController` storing Core Data in the App Group (needed early by M1, M2 and M4); the in-memory mock repositories (all four protocols) and the unit test target setup; ReplaceActivity and UndoReplace; the Settings screen (M5-06), built against the LocationService interface from M5.
 - **M4 – Backups:** `BackupEntity` and `CoreDataBackupRepository`; SaveBackup (duplicate check), RemoveBackup, FetchBackups.
-- **M5 – Settings & Widget:** `PersistenceController` storing Core Data in the App Group; the widget (next activity + backups, deep link `planshift://activity/<uuid>`); the location service and permission flow.
+- **M5 – Widget & Location:** the widget (next activity + backups, deep link `planshift://activity/<uuid>`); the location service and permission flow, with the LocationService interface defined early so M3 can build the Settings screen.
 
-**Shared pieces need to be agreed:** the Core Data model file is shared by M1, M2, M4 and M5, so agree on entity names first and keep model changes in small PRs.
+**Shared pieces need to be agreed:** the Core Data model file is shared by M1, M2, M3 and M4, so agree on entity names first and keep model changes in small PRs.
 
 ---
 
