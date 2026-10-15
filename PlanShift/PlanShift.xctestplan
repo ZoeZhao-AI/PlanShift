@@ -1,0 +1,30 @@
+{
+  "configurations" : [
+    {
+      "id" : "F2826068-F5AA-4B85-B75A-64B842390736",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false,
+    "performanceAntipatternCheckerEnabled" : true,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:PlanShift.xcodeproj",
+      "identifier" : "9B7DAA4E307F52FE0018BFE5",
+      "name" : "PlanShift"
+    }
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:PlanShift.xcodeproj",
+        "identifier" : "9B7DAA5B307F53010018BFE5",
+        "name" : "PlanShiftTests"
+      }
+    }
+  ],
+  "version" : 1
+}
