@@ -102,6 +102,9 @@ struct PlaceArtworkView: View {
             }
         }
         .clipped()
+        // `clipped()` only trims what is drawn. A filled photo still overflows its frame and would swallow
+        // taps meant for the views around it, and the artwork has nothing to tap.
+        .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
 }

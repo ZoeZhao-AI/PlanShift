@@ -9,11 +9,10 @@
 
 import SwiftUI
 
-/// M2-01 "Plan changed?". Four cards to pick what went wrong; picking one opens M2-02.
+/// M2-01 "Plan changed?". Four cards to pick what went wrong.
 ///
-/// UI only: no view model, use case or repository. It keeps just the state the screen itself needs to
-/// *look* right (which card is selected, which screen is pushed) and uses fixed sample data for the
-/// following screens. The real logic is wired in later.
+/// UI only: the selected card comes in as a parameter and a tap leaves through `onSelect`;
+/// `RecommendationFlowView` decides what happens next.
 ///
 /// Chrome is the system navigation bar: inline title and a standard "Cancel".
 struct SelectDisruptionView: View {
@@ -21,18 +20,11 @@ struct SelectDisruptionView: View {
     /// "Day 1"; when nil the activity's date is shown instead.
     var dayLabel: String?
 
+    var selected: Disruption?
+    var onSelect: (Disruption) -> Void = { _ in }
+
     @Environment(AppRouter.self) private var router
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @State private var disruption: Disruption?
-    @State private var filters = PreferenceFilters()
-    @State private var showsFilters = false
-    @State private var showsResults = false
-
-    init(activity: ItineraryActivity, dayLabel: String? = nil, selected: Disruption? = nil) {
-        self.activity = activity
-        self.dayLabel = dayLabel
-        _disruption = State(initialValue: selected)
-    }
 
     private var resolvedDayLabel: String { dayLabel ?? M2Formatting.dayLabel(for: activity, tripStart: nil) }
     private var restOfDay: String { resolvedDayLabel.hasPrefix("Day") ? resolvedDayLabel : "the day" }
@@ -61,11 +53,7 @@ struct SelectDisruptionView: View {
 
                 LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(Disruption.allCases) { item in
-                        DisruptionCard(disruption: item, isSelected: disruption == item) {
-                            disruption = item
-                            filters = Self.placeholderFilters(for: item)
-                            showsFilters = true
-                        }
+                        DisruptionCard(disruption: item, isSelected: selected == item) { onSelect(item) }
                     }
                 }
 
@@ -90,37 +78,7 @@ struct SelectDisruptionView: View {
             }
         }
         .tint(AppColors.actionText)
-        .sensoryFeedback(.selection, trigger: disruption)
-        .navigationDestination(isPresented: $showsFilters) {
-            if let disruption {
-                PreferenceFiltersView(
-                    activity: activity,
-                    disruption: disruption,
-                    filters: $filters,
-                    onReset: { filters = Self.placeholderFilters(for: disruption) },
-                    onShowAlternatives: { showsResults = true }
-                )
-                .navigationDestination(isPresented: $showsResults) {
-                    RankedAlternativesView(
-                        activity: activity,
-                        filters: filters,
-                        disruption: disruption,
-                        state: .results(M2SampleData.alternatives)
-                    )
-                }
-            }
-        }
-    }
-
-    /// PLACEHOLDER so M2-02 opens with sensible chips selected, as in the design. The real starting
-    /// filters come from the "apply disruption defaults" use case when the logic is added.
-    private static func placeholderFilters(for disruption: Disruption) -> PreferenceFilters {
-        switch disruption {
-        case .rainyWeather: M2SampleData.rainyFilters
-        case .attractionClosed: PreferenceFilters()
-        case .transportDelay: PreferenceFilters(maxDistance: .oneKm)
-        case .runningOutOfTime: PreferenceFilters(duration: .underOneHour)
-        }
+        .sensoryFeedback(.selection, trigger: selected)
     }
 }
 

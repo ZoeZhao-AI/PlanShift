@@ -23,12 +23,14 @@ struct PreferenceFiltersView: View {
     /// "Near your location" / "Near your planned activity · Bondi Beach".
     var originDescription = "Near your location"
     var isLoading = false
-    /// Shows the location pre-prompt sheet (used by the preview; the real trigger comes with the logic).
+    /// Shows the location pre-prompt sheet.
     var showsLocationPrompt = false
     var onReset: () -> Void = {}
     var onShowAlternatives: () -> Void = {}
     var onAllowLocation: () -> Void = {}
     var onNotNow: () -> Void = {}
+    /// The sheet was swiped away without choosing.
+    var onLocationPromptDismissed: () -> Void = {}
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -91,7 +93,7 @@ struct PreferenceFiltersView: View {
             .readableContentWidth()
             .background(.bar)
         }
-        .sheet(isPresented: .constant(showsLocationPrompt)) {
+        .sheet(isPresented: Binding(get: { showsLocationPrompt }, set: { if !$0 { onLocationPromptDismissed() } })) {
             LocationPermissionPromptView(onAllow: onAllowLocation, onNotNow: onNotNow)
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
