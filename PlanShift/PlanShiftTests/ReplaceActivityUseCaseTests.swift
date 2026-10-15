@@ -10,7 +10,7 @@ import XCTest
 @testable import PlanShift
 
 final class ReplaceActivityUseCaseTests: XCTestCase {
-    func testReplaceUpdatesPlaceDetailsAndPreservesSchedule() async throws {
+    func testReplaceUpdatesPlaceDetailsAndDuration() async throws {
         let original = makeActivity()
         let place = makePlace()
         let repository = MockActivityRepository(
@@ -35,7 +35,12 @@ final class ReplaceActivityUseCaseTests: XCTestCase {
         XCTAssertEqual(updated.tripId, original.tripId)
         XCTAssertEqual(updated.date, original.date)
         XCTAssertEqual(updated.startTime, original.startTime)
-        XCTAssertEqual(updated.endTime, original.endTime)
+        XCTAssertEqual(
+            updated.endTime,
+            original.startTime.addingTimeInterval(
+                TimeInterval(place.durationMinutes) * 60
+            )
+        )
         XCTAssertEqual(updated.name, place.name)
         XCTAssertEqual(updated.locationName, place.name)
         XCTAssertEqual(updated.latitude, place.latitude)
@@ -86,7 +91,10 @@ final class ReplaceActivityUseCaseTests: XCTestCase {
 
         XCTAssertEqual(result, stored)
         XCTAssertEqual(updated.startTime, stored.startTime)
-        XCTAssertEqual(updated.endTime, stored.endTime)
+        XCTAssertEqual(
+            updated.endTime,
+            stored.startTime.addingTimeInterval(3_600)
+        )
     }
 
     func testReplaceMissingActivityThrowsAndPreservesOtherActivity() async throws {
@@ -116,6 +124,110 @@ final class ReplaceActivityUseCaseTests: XCTestCase {
         )
 
         XCTAssertEqual(activities, [existing])
+    }
+    
+    func testReplaceRejectsNonPositiveDuration() async throws {
+        for duration in [0, -1] {
+            let original = makeActivity()
+            var place = makePlace()
+            place.durationMinutes = duration
+
+            let repository = MockActivityRepository(
+                activities: [original]
+            )
+            let useCase = ReplaceActivityUseCase(
+                activityRepository: repository
+            )
+
+            do {
+                _ = try await useCase.execute(
+                    activity: original,
+                    with: place
+                )
+                XCTFail("Expected invalidTimeRange.")
+            } catch {
+                XCTAssertEqual(error as? DomainError, .invalidTimeRange)
+            }
+
+            let result = try await repository.fetchActivities(
+                tripId: original.tripId
+            )
+            XCTAssertEqual(result, [original])
+        }
+    }
+
+    func testReplaceRejectsTimeConflictAndPreservesData() async throws {
+        let original = makeActivity()
+        var other = makeActivity()
+        other.tripId = original.tripId
+        other.startTime = original.endTime
+        other.endTime = other.startTime.addingTimeInterval(3_600)
+
+        var place = makePlace()
+        place.durationMinutes = 180
+
+        let repository = MockActivityRepository(
+            activities: [original, other]
+        )
+        let useCase = ReplaceActivityUseCase(
+            activityRepository: repository
+        )
+
+        do {
+            _ = try await useCase.execute(
+                activity: original,
+                with: place
+            )
+            XCTFail("Expected timeConflict.")
+        } catch {
+            XCTAssertEqual(error as? DomainError, .timeConflict)
+        }
+
+        let result = try await repository.fetchActivities(
+            tripId: original.tripId
+        )
+        XCTAssertEqual(result, [original, other])
+    }
+
+    func testReplaceAllowsAdjacentActivities() async throws {
+        let original = makeActivity()
+
+        var previous = makeActivity()
+        previous.tripId = original.tripId
+        previous.startTime = original.startTime.addingTimeInterval(-3_600)
+        previous.endTime = original.startTime
+
+        var next = makeActivity()
+        next.tripId = original.tripId
+        next.startTime = original.startTime.addingTimeInterval(3_600)
+        next.endTime = next.startTime.addingTimeInterval(3_600)
+
+        let repository = MockActivityRepository(
+            activities: [previous, original, next]
+        )
+        let useCase = ReplaceActivityUseCase(
+            activityRepository: repository
+        )
+        let place = makePlace()
+
+        _ = try await useCase.execute(
+            activity: original,
+            with: place
+        )
+
+        var expected = original
+        expected.name = place.name
+        expected.locationName = place.name
+        expected.latitude = place.latitude
+        expected.longitude = place.longitude
+        expected.setting = place.setting
+        expected.estimatedCost = place.cost
+        expected.endTime = next.startTime
+
+        let result = try await repository.fetchActivities(
+            tripId: original.tripId
+        )
+        XCTAssertEqual(result, [previous, expected, next])
     }
 
     private func makeActivity() -> ItineraryActivity {

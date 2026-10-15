@@ -28,6 +28,24 @@ nonisolated struct ReplaceActivityUseCase: Sendable {
             throw DomainError.activityNotFound
         }
 
+        guard place.durationMinutes > 0 else {
+            throw DomainError.invalidTimeRange
+        }
+
+        let endTime = original.startTime.addingTimeInterval(
+            TimeInterval(place.durationMinutes) * 60
+        )
+
+        let hasConflict = activities.contains {
+            $0.id != original.id &&
+            $0.startTime < endTime &&
+            $0.endTime > original.startTime
+        }
+
+        guard !hasConflict else {
+            throw DomainError.timeConflict
+        }
+
         var replacement = original
         replacement.name = place.name
         replacement.locationName = place.name
@@ -35,6 +53,7 @@ nonisolated struct ReplaceActivityUseCase: Sendable {
         replacement.longitude = place.longitude
         replacement.setting = place.setting
         replacement.estimatedCost = place.cost
+        replacement.endTime = endTime
 
         try await activityRepository.update(replacement)
 
