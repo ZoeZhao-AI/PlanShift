@@ -9,9 +9,14 @@ import Foundation
 
 actor MockActivityRepository: ActivityRepository {
     private var activities: [ItineraryActivity]
+    private let updateError: DomainError?
 
-    init(activities: [ItineraryActivity] = []) {
+    init(
+        activities: [ItineraryActivity] = [],
+        updateError: DomainError? = nil
+    ) {
         self.activities = activities
+        self.updateError = updateError
     }
 
     func fetchActivities(
@@ -37,6 +42,9 @@ actor MockActivityRepository: ActivityRepository {
     }
 
     func update(_ activity: ItineraryActivity) async throws {
+        if let updateError {
+            throw updateError
+        }
         guard let index = activities.firstIndex(
             where: { $0.id == activity.id }
         ) else {

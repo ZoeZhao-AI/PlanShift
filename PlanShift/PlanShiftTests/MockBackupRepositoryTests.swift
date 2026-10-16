@@ -71,7 +71,9 @@ final class MockBackupRepositoryTests: XCTestCase {
             backups: [original, other]
         )
         var updated = original
-        updated.place.name = "Updated Museum"
+        var updatedPlace = try XCTUnwrap(place(from: updated))
+        updatedPlace.name = "Updated Museum"
+        updated.content = .place(updatedPlace)
         updated.savedAt = baseDate.addingTimeInterval(120)
 
         try await repository.save(updated)
@@ -119,7 +121,7 @@ final class MockBackupRepositoryTests: XCTestCase {
         )
 
         let result = try await repository.exists(
-            placeId: backup.place.id,
+            placeId: try XCTUnwrap(place(from: backup)).id,
             tripId: backup.tripId
         )
 
@@ -147,7 +149,7 @@ final class MockBackupRepositoryTests: XCTestCase {
         )
 
         let result = try await repository.exists(
-            placeId: backup.place.id,
+            placeId: try XCTUnwrap(place(from: backup)).id,
             tripId: UUID()
         )
 
@@ -189,9 +191,17 @@ final class MockBackupRepositoryTests: XCTestCase {
 
         return BackupOption(
             tripId: tripId,
-            place: place,
+            content: .place(place),
             dayDate: baseDate,
             savedAt: savedAt ?? baseDate
         )
+    }
+    
+    private func place(from backup: BackupOption) -> Place? {
+        guard case .place(let place) = backup.content else {
+            return nil
+        }
+
+        return place
     }
 }

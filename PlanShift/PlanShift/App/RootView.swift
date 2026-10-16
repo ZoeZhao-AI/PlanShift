@@ -5,6 +5,27 @@ import SwiftUI
 /// The app's root: one tab per area, and sheets driven by `AppRouter.activeSheet`.
 struct RootView: View {
     @Environment(AppRouter.self) private var router
+    @State private var replaceViewModel: ReplaceViewModel
+    
+    init() {
+        // Temporary dependencies until the Core Data repositories are available.
+        let activityRepository = MockActivityRepository(
+            activities: [PreviewSamples.coastalWalk]
+        )
+        let backupRepository = MockBackupRepository()
+
+        _replaceViewModel = State(
+            initialValue: ReplaceViewModel(
+                replaceActivity: ReplaceActivityUseCase(
+                    activityRepository: activityRepository,
+                    backupRepository: backupRepository
+                ),
+                undoReplace: UndoReplaceUseCase(
+                    activityRepository: activityRepository
+                )
+            )
+        )
+    }
 
     var body: some View {
         // @Bindable lets us create bindings ($router.selectedTab) to the router.
@@ -53,6 +74,7 @@ struct RootView: View {
         .onOpenURL { url in
             router.handle(url: url)
         }
+        .environment(replaceViewModel)
     }
 }
 
