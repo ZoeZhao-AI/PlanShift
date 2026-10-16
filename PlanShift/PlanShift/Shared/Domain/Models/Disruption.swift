@@ -1,3 +1,10 @@
+//
+//  Disruption.swift
+//  PlanShift
+//
+//  Created by Van Dao Le on 15/10/2026.
+//
+
 // Module: Shared – domain model.
 
 import Foundation
@@ -22,10 +29,10 @@ nonisolated enum Disruption: String, CaseIterable, Codable, Hashable, Identifiab
 
     var subtitle: String {
         switch self {
-        case .rainyWeather: "Find something indoors"
-        case .attractionClosed: "Find a similar place nearby"
-        case .transportDelay: "Stay close to where you are"
-        case .runningOutOfTime: "Find something quick"
+        case .rainyWeather: "Indoor options nearby"
+        case .attractionClosed: "Something similar"
+        case .transportDelay: "Stay close by"
+        case .runningOutOfTime: "Shorter activities"
         }
     }
 
