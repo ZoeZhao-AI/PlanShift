@@ -163,6 +163,18 @@ final class BackupsListViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.summaryText, "1 saved for Sydney Trip")
     }
 
+    func testBackupForRowReturnsTheLoadedBackupUntilDeleted() async throws {
+        let backup = makePlaceBackup(day: 13, name: "A")
+        let viewModel = makeViewModel(MockBackupRepository(backups: [backup]))
+        await viewModel.load(trip: trip)
+        let row = try XCTUnwrap(viewModel.sections.first?.rows.first)
+
+        XCTAssertEqual(viewModel.backup(for: row.id), backup)
+
+        await viewModel.delete(backupId: row.id)
+        XCTAssertNil(viewModel.backup(for: row.id))
+    }
+
     func testFailedDeleteKeepsListAndSetsError() async {
         let backup = makePlaceBackup(day: 13, name: "A")
         let repository = MockBackupRepository(backups: [backup], deleteError: .persistenceFailure)

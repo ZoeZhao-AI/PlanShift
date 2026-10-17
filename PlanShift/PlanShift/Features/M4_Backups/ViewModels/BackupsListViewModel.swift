@@ -34,6 +34,9 @@ final class BackupsListViewModel {
     /// The trip shown, kept for the summary text.
     private(set) var trip: Trip?
 
+    /// The loaded backups by id, so a tapped row can be opened in M4-02.
+    @ObservationIgnored private var backupsById: [UUID: BackupOption] = [:]
+
     private let fetchBackups: FetchBackupsUseCase
     private let removeBackup: RemoveBackupUseCase
     private let calendar: Calendar
@@ -72,6 +75,8 @@ final class BackupsListViewModel {
         do {
             let groups = try await fetchBackups.execute(tripId: trip.id)
             sections = groups.map { makeSection(from: $0, trip: trip) }
+            let backups = groups.flatMap(\.backups)
+            backupsById = Dictionary(uniqueKeysWithValues: backups.map { ($0.id, $0) })
         } catch {
             // Keep whatever was shown before and tell the user.
             errorMessage = "Your backups could not be loaded. Please try again."
@@ -89,12 +94,19 @@ final class BackupsListViewModel {
             return
         }
 
+        backupsById[backupId] = nil
+
         // Remove the row, then drop any day that is now empty.
         sections = sections.compactMap { section in
             let rows = section.rows.filter { $0.id != backupId }
             guard !rows.isEmpty else { return nil }
             return BackupDaySection(dayDate: section.dayDate, header: section.header, rows: rows)
         }
+    }
+
+    /// The full backup behind a row, e.g. to open M4-02 "Use a backup". Nil if it is no longer loaded.
+    func backup(for rowId: UUID) -> BackupOption? {
+        backupsById[rowId]
     }
 
     func clearError() {
