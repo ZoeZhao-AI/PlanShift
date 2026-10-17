@@ -79,7 +79,10 @@ actor InMemoryBackupRepository: BackupRepository {
     }
 
     func exists(placeId: UUID, tripId: UUID) async throws -> Bool {
-        backups.values.contains { $0.tripId == tripId && $0.place.id == placeId }
+        backups.values.contains { backup in
+            guard backup.tripId == tripId, case .place(let place) = backup.content else { return false }
+            return place.id == placeId
+        }
     }
 }
 
@@ -96,7 +99,7 @@ nonisolated struct RepositoryBackupSaver: BackupSaving {
         if try await repository.exists(placeId: place.id, tripId: activity.tripId) {
             throw DomainError.duplicateBackup
         }
-        let backup = BackupOption(tripId: activity.tripId, place: place, dayDate: activity.date, savedAt: now())
+        let backup = BackupOption(tripId: activity.tripId, content: .place(place), dayDate: activity.date, savedAt: now())
         try await repository.save(backup)
     }
 }
