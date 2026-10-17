@@ -133,6 +133,11 @@ After that, `InMemoryBackupRepository` and `RepositoryBackupSaver` in `M2Integra
 
 **"Original plan" backups are view-only for now.** These are `.activity` backups, which M3 creates when an activity is replaced. They show in the list and can be deleted, but M4-02 shows "Restoring an original plan isn't available yet." and keeps Continue disabled.
 
+**Still to do during integration.**
+- Add a relationship between BackupEntity and TripEntity (Trip has many Backups, cascade delete). BackupEntity only stores tripId for now because TripEntity wasn't on develop yet. The brief asks for a relational schema, so this is needed.
+- Load the Core Data model only once in PersistenceController (for example a static model). Otherwise each in-memory controller in tests loads its own copy and Core Data logs "Multiple NSEntityDescriptions". CoreDataBackupRepository works around it, but other repositories will hit it too.
+- For M5: the widget needs target membership for the model file, PersistenceController, BackupEntity.swift, BackupEntityMapper.swift and CoreDataBackupRepository.swift.
+
 ---
 
 ## Git rules
