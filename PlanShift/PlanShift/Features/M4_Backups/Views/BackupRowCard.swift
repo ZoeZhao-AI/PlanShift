@@ -1,10 +1,14 @@
-// Module: M4 – one backup card on M4-01: thumbnail, title, tag pills, chevron.
+// Module: M4 – one backup card (M4-01 rows and the top of M4-02): thumbnail, title, tag pills.
 
 import SwiftUI
 
 /// A rounded card for one backup. Only shows what `BackupRow` already contains.
 struct BackupRowCard: View {
     let row: BackupRow
+    /// Small teal label above the title, e.g. "Backup" on M4-02.
+    var badge: String?
+    /// The list rows open M4-02, so they show a chevron; the M4-02 card does not.
+    var showsChevron = true
 
     /// Grows with Dynamic Type so the thumbnail stays in proportion with the text.
     @ScaledMetric(relativeTo: .body) private var scaledThumbnailSize: CGFloat = 64
@@ -25,6 +29,15 @@ struct BackupRowCard: View {
             thumbnail
 
             VStack(alignment: .leading, spacing: 6) {
+                if let badge {
+                    Text(badge)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(AppColors.primary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(AppColors.primary.opacity(0.15), in: Capsule())
+                }
+
                 Text(row.title)
                     .font(.headline)
                     .foregroundStyle(AppColors.textPrimary)
@@ -42,7 +55,7 @@ struct BackupRowCard: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            if !dynamicTypeSize.isAccessibilitySize {
+            if showsChevron, !dynamicTypeSize.isAccessibilitySize {
                 Image(systemName: "chevron.right")
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(AppColors.textSecondary)
