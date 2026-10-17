@@ -93,6 +93,46 @@ Each owner replaces their placeholder screens and writes their own view models, 
 
 **Shared pieces need to be agreed:** the Core Data model file is shared by M1, M2, M3 and M4, so agree on entity names first and keep model changes in small PRs.
 
+### How to connect M4 (Backups)
+
+**Repositories.** M4 needs one `BackupRepository` and one `ActivityRepository`. Create each once and share it, so M2, M3 and M4 all see the same backups. The real backup repository is `CoreDataBackupRepository(container: persistence.container)`, available after its PR (`feat/m4-backup-repository`) merges. It only needs the `NSPersistentContainer` and is safe to call from any async code.
+
+**Use cases.**
+```swift
+let fetchBackups  = FetchBackupsUseCase(repository: backupRepository)
+let removeBackup  = RemoveBackupUseCase(repository: backupRepository)
+let saveBackup    = SaveBackupUseCase(repository: backupRepository)          // also M2's BackupSaving
+let fetchDay      = FetchDayActivitiesUseCase(repository: activityRepository)
+```
+
+**M4-01 Backups List** (Backups tab). Pass a view model and the current trip:
+```swift
+BackupsListView(
+    viewModel: BackupsListViewModel(fetchBackups: fetchBackups, removeBackup: removeBackup),
+    trip: currentTrip
+)
+```
+
+**M4-02 Use a Backup** (sheet `.useBackup(backup:)`). Create a new view model for each backup:
+```swift
+UseBackupView(
+    backup: backup,
+    viewModel: UseBackupViewModel(backup: backup, fetchDayActivities: fetchDay),
+    trip: currentTrip
+)
+```
+Continue opens M3-01 with `router.present(.replaceConfirmation(...))`, so no extra wiring is needed.
+
+**Replace these mocks.** In `RootView`, `BackupsListView()` and `UseBackupView(backup:)` are called without arguments, so they fall back to `.mocked()` view models and `PreviewSamples.trip`. Pass the real view model and trip as shown above. The `.mocked(...)` helpers in `BackupsListView.swift` and `UseBackupView.swift` can stay, because the previews use them. `RootView` also gives M3's `ReplaceActivityUseCase` its own `MockBackupRepository`. Give it the shared backup repository instead, so a replaced activity shows up in the Backups tab as "Original plan".
+
+**M2 bookmarks.** `SaveBackupUseCase` already conforms to M2's `BackupSaving` (same duplicate rule, and it also saves only the day). In `RecommendationFlowViewModel.mocked(for:)`, M2 currently passes `RepositoryBackupSaver(repository: InMemoryBackupRepository())`. Pass `saveBackup` instead, and bookmarks will appear in the Backups tab:
+```swift
+RecommendationFlowViewModel(activity: activity, getAlternatives: ..., backups: saveBackup, location: ...)
+```
+After that, `InMemoryBackupRepository` and `RepositoryBackupSaver` in `M2IntegrationMocks.swift` are unused. The file also holds `MockLocationService`, so delete the whole file once M5's real location service is wired in too.
+
+**"Original plan" backups are view-only for now.** These are `.activity` backups, which M3 creates when an activity is replaced. They show in the list and can be deleted, but M4-02 shows "Restoring an original plan isn't available yet." and keeps Continue disabled.
+
 ---
 
 ## Git rules
