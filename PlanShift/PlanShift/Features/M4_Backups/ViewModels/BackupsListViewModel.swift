@@ -16,6 +16,45 @@ nonisolated struct BackupRow: Identifiable, Hashable, Sendable {
     let isFromReplacedActivity: Bool
 }
 
+extension BackupRow {
+    /// Builds the display row for a backup. Also used by M4-02 for its backup card.
+    init(backup: BackupOption) {
+        switch backup.content {
+        case .place(let place):
+            self.init(
+                id: backup.id,
+                title: place.name,
+                tags: Self.tags(setting: place.setting, cost: place.cost, minutes: place.durationMinutes),
+                imageName: place.imageName.isEmpty ? nil : place.imageName,
+                isFromReplacedActivity: false
+            )
+        case .activity(let activity):
+            self.init(
+                id: backup.id,
+                title: activity.name,
+                tags: Self.tags(
+                    setting: activity.setting,
+                    cost: activity.estimatedCost,
+                    minutes: Int(activity.endTime.timeIntervalSince(activity.startTime) / 60)
+                ),
+                // Activities have no image in the dataset.
+                imageName: nil,
+                isFromReplacedActivity: true
+            )
+        }
+    }
+
+    /// e.g. ["Indoor", "Free entry", "~1.5 hrs"]. Reuses M2's cost and duration formats.
+    private static func tags(setting: ActivitySetting, cost: Decimal, minutes: Int) -> [String] {
+        var tags = [setting.title]
+        tags.append(cost == 0 ? "Free entry" : M2Formatting.cost(cost))
+        if minutes > 0 {
+            tags.append(M2Formatting.duration(minutes: minutes))
+        }
+        return tags
+    }
+}
+
 /// One day of the list, e.g. header "DAY 1 · FRI 13 NOV" and its rows.
 nonisolated struct BackupDaySection: Identifiable, Hashable, Sendable {
     let dayDate: Date
@@ -119,7 +158,7 @@ final class BackupsListViewModel {
         BackupDaySection(
             dayDate: group.dayDate,
             header: header(for: group.dayDate, trip: trip),
-            rows: group.backups.map(makeRow)
+            rows: group.backups.map(BackupRow.init(backup:))
         )
     }
 
@@ -137,41 +176,5 @@ final class BackupsListViewModel {
         formatter.dateFormat = "EEE d MMM"
 
         return "DAY \(daysFromStart + 1) · \(formatter.string(from: day).uppercased())"
-    }
-
-    private func makeRow(from backup: BackupOption) -> BackupRow {
-        switch backup.content {
-        case .place(let place):
-            BackupRow(
-                id: backup.id,
-                title: place.name,
-                tags: tags(setting: place.setting, cost: place.cost, minutes: place.durationMinutes),
-                imageName: place.imageName.isEmpty ? nil : place.imageName,
-                isFromReplacedActivity: false
-            )
-        case .activity(let activity):
-            BackupRow(
-                id: backup.id,
-                title: activity.name,
-                tags: tags(
-                    setting: activity.setting,
-                    cost: activity.estimatedCost,
-                    minutes: Int(activity.endTime.timeIntervalSince(activity.startTime) / 60)
-                ),
-                // Activities have no image in the dataset.
-                imageName: nil,
-                isFromReplacedActivity: true
-            )
-        }
-    }
-
-    /// e.g. ["Indoor", "Free entry", "~1.5 hrs"]. Reuses M2's cost and duration formats.
-    private func tags(setting: ActivitySetting, cost: Decimal, minutes: Int) -> [String] {
-        var tags = [setting.title]
-        tags.append(cost == 0 ? "Free entry" : M2Formatting.cost(cost))
-        if minutes > 0 {
-            tags.append(M2Formatting.duration(minutes: minutes))
-        }
-        return tags
     }
 }
