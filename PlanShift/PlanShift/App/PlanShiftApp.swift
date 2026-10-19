@@ -20,8 +20,8 @@ struct PlanShiftApp: App {
     var body: some Scene {
         WindowGroup {
             switch persistence {
-            case .success:
-                RootView()
+            case .success(let persistence):
+                RootView(persistence: persistence)
                     .environment(router)
 
             case .failure:
