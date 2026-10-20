@@ -20,8 +20,8 @@ final class GetLocationStatusTests: XCTestCase {
     }
 
     @MainActor
-    func testDeniedAndRestrictedMapToDomainError() {
-        for status in [LocationAuthorizationStatus.denied, .restricted] {
+    func testBlockedStatesMapToDomainError() {
+        for status in [LocationAuthorizationStatus.denied, .restricted, .servicesDisabled] {
             let service = M5LocationStub(status: status)
             XCTAssertThrowsError(try GetLocationStatus(location: service).execute()) {
                 XCTAssertEqual($0 as? DomainError, .locationDenied)
@@ -96,6 +96,66 @@ final class GetLocationStatusTests: XCTestCase {
         XCTAssertEqual(CoreLocationService.mapAuthorization(.restricted), .restricted)
         XCTAssertEqual(CoreLocationService.mapAuthorization(.authorizedWhenInUse), .authorizedWhenInUse)
         XCTAssertEqual(CoreLocationService.mapAuthorization(.authorizedAlways), .authorizedWhenInUse)
+    }
+
+    func testDisabledServicesOverrideEveryAppPermission() {
+        let statuses: [CLAuthorizationStatus] = [
+            .notDetermined, .denied, .restricted, .authorizedWhenInUse, .authorizedAlways
+        ]
+        for status in statuses {
+            let result = CoreLocationService.mapAuthorization(status, servicesEnabled: false)
+            XCTAssertEqual(result, .servicesDisabled)
+            XCTAssertTrue(result.isBlocked)
+            XCTAssertFalse(result.isAuthorized)
+        }
+        // The same denied app permission is distinct when device-wide services are on.
+        XCTAssertEqual(CoreLocationService.mapAuthorization(.denied, servicesEnabled: true), .denied)
+    }
+
+    @MainActor
+    func testDisabledServicesDoNotRequestPermissionOrPosition() async {
+        let service = M5LocationStub(status: .servicesDisabled)
+        let model = LocationPermissionViewModel(location: service)
+        model.refresh()
+        await model.allowLocation()
+        XCTAssertEqual(model.status, .servicesDisabled)
+        XCTAssertEqual(model.error, .locationDenied)
+        XCTAssertEqual(service.requestCount, 0)
+        XCTAssertEqual(service.locationFetchCount, 0)
+        XCTAssertFalse(model.isRequesting)
+    }
+
+    @MainActor
+    func testReturningFromSettingsUsesPermissionAfterServicesAreEnabled() {
+        for permission in [LocationAuthorizationStatus.denied, .restricted, .notDetermined, .authorizedWhenInUse] {
+            let service = M5LocationStub(status: .servicesDisabled)
+            let model = LocationPermissionViewModel(location: service)
+            model.refresh()
+            XCTAssertEqual(model.error, .locationDenied)
+
+            service.authorizationStatus = permission
+            model.refresh()
+            XCTAssertEqual(model.status, permission)
+            XCTAssertEqual(model.error, permission.isBlocked ? .locationDenied : nil)
+            XCTAssertEqual(service.requestCount, 0)
+            XCTAssertEqual(service.locationFetchCount, 0)
+        }
+    }
+
+    @MainActor
+    func testReenabledServicesStillRequireExplicitPermissionAction() async {
+        let service = M5LocationStub(status: .servicesDisabled)
+        let model = LocationPermissionViewModel(location: service)
+        model.refresh()
+        service.authorizationStatus = .notDetermined
+        model.refresh()
+        XCTAssertEqual(service.requestCount, 0)
+        XCTAssertNil(model.error)
+
+        await model.allowLocation()
+        XCTAssertEqual(service.requestCount, 1)
+        XCTAssertEqual(model.status, .authorizedWhenInUse)
+        XCTAssertEqual(service.locationFetchCount, 0)
     }
 }
 

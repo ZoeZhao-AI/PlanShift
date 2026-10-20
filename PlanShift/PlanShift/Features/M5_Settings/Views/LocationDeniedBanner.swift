@@ -20,12 +20,11 @@ struct LocationDeniedBanner: View {
     var body: some View {
         if model.status.isBlocked {
             VStack(alignment: .leading, spacing: 12) {
-                Label("Location access is off", systemImage: "location.slash")
+                Label(model.status == .servicesDisabled ? "Location Services are off" : "Location access is off",
+                      systemImage: "location.slash")
                     .font(.headline)
                     .accessibilityAddTraits(.isHeader)
-                Text(model.status == .restricted
-                     ? "Location access is restricted on this device. You may need help from the person who manages its restrictions."
-                     : "You can allow location access in Settings to find alternatives near you.")
+                Text(explanation)
                 Text("You can still manage your itinerary and use your planned activity’s location for recommendations.")
                     .font(.subheadline)
                 Button { Task { await model.openSettings() } } label: {
@@ -44,11 +43,27 @@ struct LocationDeniedBanner: View {
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
         }
     }
+
+    private var explanation: String {
+        switch model.status {
+        case .servicesDisabled:
+            "Location Services are off for this device. Open Settings, return to the main Settings screen, then go to Privacy & Security > Location Services to turn them on."
+        case .restricted:
+            "Location access is restricted on this device. You may need help from the person who manages its restrictions."
+        default:
+            "You can allow location access in Settings to find alternatives near you."
+        }
+    }
 }
 
 #if DEBUG
 #Preview {
     LocationDeniedBanner(location: LocationPreviewService(status: .denied))
+        .padding()
+}
+
+#Preview("Location Services off") {
+    LocationDeniedBanner(location: LocationPreviewService(status: .servicesDisabled))
         .padding()
 }
 #endif

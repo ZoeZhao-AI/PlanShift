@@ -7,7 +7,7 @@ final class LocationAppearanceTests: XCTestCase {
     @MainActor
     func testCapturePermissionStatesInBothAppearancesAndLargeText() async throws {
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.first as? UIWindowScene)
-        for status in [LocationAuthorizationStatus.notDetermined, .denied, .restricted] {
+        for status in [LocationAuthorizationStatus.notDetermined, .denied, .restricted, .servicesDisabled] {
             for dark in [false, true] {
                 for largeText in [false, true] {
                     let screen = NavigationStack {
