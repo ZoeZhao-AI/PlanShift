@@ -25,7 +25,8 @@ nonisolated struct WidgetActivityTimeline: Equatable, Sendable {
                 return $0.startTime < $1.startTime
             }
 
-        var entries = [Entry(date: now, state: upcoming.first.map(State.activity) ?? .empty)]
+        guard let first = upcoming.first else { return .empty(now: now) }
+        var entries = [Entry(date: now, state: .activity(first))]
         for (index, activity) in upcoming.enumerated() {
             let next = index + 1 < upcoming.count ? upcoming[index + 1] : nil
             // All activities with this start time stop being "upcoming" together.
@@ -35,7 +36,12 @@ nonisolated struct WidgetActivityTimeline: Equatable, Sendable {
 
         // Cache known transitions so advancing to the next activity does not require a reload.
         // Periodic reloads discover edits; successful app writes should also request a reload.
-        return Self(entries: entries, reloadAfter: now.addingTimeInterval(upcoming.isEmpty ? 3600 : 1800))
+        return Self(entries: entries, reloadAfter: now.addingTimeInterval(1800))
+    }
+
+    static func empty(now: Date) -> Self {
+        Self(entries: [Entry(date: now, state: .empty)],
+             reloadAfter: now.addingTimeInterval(3600))
     }
 
     static func unavailable(now: Date) -> Self {
