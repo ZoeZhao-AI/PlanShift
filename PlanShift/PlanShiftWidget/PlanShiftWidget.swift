@@ -1,84 +1,49 @@
-//
-//  PlanShiftWidget.swift
-//  PlanShiftWidget
-//
-//  Created by Alex W on 14/10/2026.
-//
-
-import WidgetKit
 import SwiftUI
+import WidgetKit
 
-struct Provider: TimelineProvider {
-    func placeholder(in context: Context) -> SimpleEntry {
-        SimpleEntry(date: Date(), emoji: "😀")
+extension WidgetActivityTimeline.Entry: TimelineEntry {}
+
+struct NextActivityProvider: TimelineProvider {
+    typealias Entry = WidgetActivityTimeline.Entry
+
+    func placeholder(in context: Context) -> Entry {
+        Entry(date: .now, state: .empty)
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
-        let entry = SimpleEntry(date: Date(), emoji: "😀")
-        completion(entry)
+    func getSnapshot(in context: Context, completion: @escaping (Entry) -> Void) {
+        completion(Entry(date: .now, state: .unavailable))
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
-        var entries: [SimpleEntry] = []
-
-        // Generate a timeline consisting of five entries an hour apart, starting from the current date.
-        let currentDate = Date()
-        for hourOffset in 0 ..< 5 {
-            let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: currentDate)!
-            let entry = SimpleEntry(date: entryDate, emoji: "😀")
-            entries.append(entry)
-        }
-
-        let timeline = Timeline(entries: entries, policy: .atEnd)
-        completion(timeline)
-    }
-
-//    func relevances() async -> WidgetRelevances<Void> {
-//        // Generate a list containing the contexts this widget is relevant in.
-//    }
-}
-
-struct SimpleEntry: TimelineEntry {
-    let date: Date
-    let emoji: String
-}
-
-struct PlanShiftWidgetEntryView : View {
-    var entry: Provider.Entry
-
-    var body: some View {
-        VStack {
-            Text("Time:")
-            Text(entry.date, style: .time)
-
-            Text("Emoji:")
-            Text(entry.emoji)
-        }
+    func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> Void) {
+        // M1's persistent activity repository and current-trip selection are not wired yet.
+        // Keep this distinct from a successfully loaded itinerary with no upcoming activities.
+        let timeline = WidgetActivityTimeline.unavailable(now: .now)
+        completion(Timeline(entries: timeline.entries, policy: .after(timeline.reloadAfter)))
     }
 }
 
 struct PlanShiftWidget: Widget {
-    let kind: String = "PlanShiftWidget"
+    let kind = "PlanShiftWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: Provider()) { entry in
-            if #available(iOS 17.0, *) {
-                PlanShiftWidgetEntryView(entry: entry)
-                    .containerBackground(.fill.tertiary, for: .widget)
-            } else {
-                PlanShiftWidgetEntryView(entry: entry)
-                    .padding()
-                    .background()
-            }
+        StaticConfiguration(kind: kind, provider: NextActivityProvider()) { entry in
+            PlanShiftWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName("My Widget")
-        .description("This is an example widget.")
+        .configurationDisplayName("Next activity")
+        .description("See your next planned activity and tap to open its details.")
+        .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular])
     }
 }
 
-#Preview(as: .systemSmall) {
-    PlanShiftWidget()
-} timeline: {
-    SimpleEntry(date: .now, emoji: "😀")
-    SimpleEntry(date: .now, emoji: "🤩")
+struct PlanShiftWidgetEntryView: View {
+    let entry: WidgetActivityTimeline.Entry
+    @Environment(\.widgetFamily) private var family
+    @Environment(\.widgetRenderingMode) private var renderingMode
+
+    var body: some View {
+        NextActivityWidgetView(entry: entry, family: family, renderingMode: renderingMode)
+            .containerBackground(for: .widget) {
+                AppColors.backgroundGradient
+            }
+    }
 }
