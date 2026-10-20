@@ -2,6 +2,9 @@ import Foundation
 
 /// Plain values that the widget provider can convert to WidgetKit timeline entries.
 nonisolated struct WidgetActivityTimeline: Equatable, Sendable {
+    /// Shared with the app's reload requests. Keep stable for widgets already installed.
+    static let widgetKind = "PlanShiftWidget"
+
     enum State: Equatable, Sendable {
         case activity(ItineraryActivity)
         case empty
