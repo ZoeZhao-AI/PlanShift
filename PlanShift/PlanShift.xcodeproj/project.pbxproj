@@ -58,7 +58,7 @@
 		9B7DAA7F307F55A50018BFE5 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		9B7DAA81307F55A50018BFE5 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		9B7DAA94307F56620018BFE5 /* PlanShiftWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PlanShiftWidgetExtension.entitlements; sourceTree = "<group>"; };
-		C6700F00307FAC9F00B6B3DB /* PlanShift.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = PlanShift.xctestplan; sourceTree = "<group>"; };
+		C6700F00307FAC9F00B6B3DB /* PlanShift.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = file; path = PlanShift.xctestplan; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
