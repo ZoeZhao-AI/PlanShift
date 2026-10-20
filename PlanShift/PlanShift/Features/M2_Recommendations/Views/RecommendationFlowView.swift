@@ -13,14 +13,13 @@ import SwiftUI
 /// so none of them needs to know about use cases or repositories.
 ///
 /// Bookmarks go through `backups` (M4's `SaveBackupUseCase`), so they land in the Backups tab.
-/// MOCK WIRING: location uses the stand-in in `M2IntegrationMocks.swift` until M5 provides the real one.
-/// Swap it in `RecommendationFlowViewModel.mocked(for:backups:)`.
+/// Location comes from `CoreLocationService` (When In Use, one fix, asked only after the pre-prompt).
 struct RecommendationFlowView: View {
     @State private var model: RecommendationFlowViewModel
     @State private var showsFilters = false
 
     init(activity: ItineraryActivity, backups: BackupSaving) {
-        _model = State(initialValue: .mocked(for: activity, backups: backups))
+        _model = State(initialValue: .live(for: activity, backups: backups))
     }
 
     var body: some View {
@@ -128,22 +127,16 @@ private struct ResultsStep: View {
     }
 }
 
-// MARK: - Mock wiring
+// MARK: - Wiring
 
 extension RecommendationFlowViewModel {
-    /// A view model on the bundled places, the given backup saver and a mock location service.
-    /// Launch with `-m2LocationDenied` to make the permission dialog end in "Don't Allow".
-    static func mocked(for activity: ItineraryActivity, backups: BackupSaving) -> RecommendationFlowViewModel {
-        let denied = ProcessInfo.processInfo.arguments.contains("-m2LocationDenied")
-        return RecommendationFlowViewModel(
+    /// A view model on the bundled places, the given backup saver and the system location service.
+    static func live(for activity: ItineraryActivity, backups: BackupSaving) -> RecommendationFlowViewModel {
+        RecommendationFlowViewModel(
             activity: activity,
             getAlternatives: GetAlternativesUseCase(places: BundledPlaceRepository()),
             backups: backups,
-            location: MockLocationService(
-                status: .notDetermined,
-                statusAfterRequest: denied ? .denied : .authorizedWhenInUse,
-                coordinate: GeoCoordinate(latitude: -33.8688, longitude: 151.2093)
-            )
+            location: CoreLocationService()
         )
     }
 }
