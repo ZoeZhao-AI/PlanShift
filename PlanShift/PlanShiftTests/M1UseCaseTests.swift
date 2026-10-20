@@ -9,7 +9,7 @@ import Foundation
 import XCTest
 @testable import PlanShift
 
-actor MockTripRepository: TripRepository {
+actor M1MockTripRepository: TripRepository {
 
     private var currentTrip: Trip?
 
@@ -93,7 +93,7 @@ final class M1UseCaseTests: XCTestCase {
 
     func testCreateTrip() async throws {
 
-        let repository = MockTripRepository()
+        let repository = M1MockTripRepository()
 
         let useCase = CreateTripUseCase(
             repository: repository
@@ -121,7 +121,7 @@ final class M1UseCaseTests: XCTestCase {
     
     func testCreateTripEmptyName() async throws {
 
-        let repository = MockTripRepository()
+        let repository = M1MockTripRepository()
         let useCase = CreateTripUseCase(
             repository: repository
         )
@@ -151,7 +151,7 @@ final class M1UseCaseTests: XCTestCase {
     
     func testCreateTripInvalidDates() async throws {
 
-        let repository = MockTripRepository()
+        let repository = M1MockTripRepository()
 
         let useCase = CreateTripUseCase(
             repository: repository
