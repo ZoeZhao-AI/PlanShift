@@ -12,15 +12,16 @@
 
 import Foundation
 
-/// Location authorisation as the app understands it (maps CLAuthorizationStatus).
+/// App permission plus device-wide Location Services availability.
 nonisolated enum LocationAuthorizationStatus: Equatable, Sendable {
     case notDetermined
     case denied
     case restricted
+    case servicesDisabled
     case authorizedWhenInUse
 
     var isAuthorized: Bool { self == .authorizedWhenInUse }
-    var isBlocked: Bool { self == .denied || self == .restricted }
+    var isBlocked: Bool { self == .denied || self == .restricted || self == .servicesDisabled }
 }
 
 /// Reads location permission and a one-shot position. Foreground "When In Use" only.

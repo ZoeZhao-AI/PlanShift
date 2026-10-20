@@ -36,8 +36,7 @@ final class CoreLocationService: NSObject, LocationProviding, CLLocationManagerD
         let enabled = await Task.detached {
             CLLocationManager.locationServicesEnabled()
         }.value
-        // Until the shared enum gains servicesDisabled, disabled services map to denied.
-        authorizationStatus = enabled ? Self.mapAuthorization(manager.authorizationStatus) : .denied
+        authorizationStatus = Self.mapAuthorization(manager.authorizationStatus, servicesEnabled: enabled)
         if authorizationStatus != .notDetermined {
             finishPermissionRequests()
         }
@@ -123,8 +122,12 @@ final class CoreLocationService: NSObject, LocationProviding, CLLocationManagerD
         Task { @MainActor [weak self] in self?.finishPositionRequests(with: nil) }
     }
 
-    nonisolated static func mapAuthorization(_ status: CLAuthorizationStatus) -> LocationAuthorizationStatus {
-        switch status {
+    nonisolated static func mapAuthorization(
+        _ status: CLAuthorizationStatus,
+        servicesEnabled: Bool = true
+    ) -> LocationAuthorizationStatus {
+        guard servicesEnabled else { return .servicesDisabled }
+        return switch status {
         case .notDetermined: .notDetermined
         case .denied: .denied
         case .restricted: .restricted
