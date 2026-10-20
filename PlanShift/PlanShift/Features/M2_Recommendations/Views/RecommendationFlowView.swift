@@ -12,14 +12,15 @@ import SwiftUI
 /// Root of the disruption sheet. Owns the `RecommendationFlowViewModel` and feeds the UI-only screens,
 /// so none of them needs to know about use cases or repositories.
 ///
-/// MOCK WIRING: location and backups use the stand-ins in `M2IntegrationMocks.swift` until M5 (location)
-/// and M4 (backups) provide the real ones. Swap them in `RecommendationFlowViewModel.mocked(for:)`.
+/// Bookmarks go through `backups` (M4's `SaveBackupUseCase`), so they land in the Backups tab.
+/// MOCK WIRING: location uses the stand-in in `M2IntegrationMocks.swift` until M5 provides the real one.
+/// Swap it in `RecommendationFlowViewModel.mocked(for:backups:)`.
 struct RecommendationFlowView: View {
     @State private var model: RecommendationFlowViewModel
     @State private var showsFilters = false
 
-    init(activity: ItineraryActivity) {
-        _model = State(initialValue: .mocked(for: activity))
+    init(activity: ItineraryActivity, backups: BackupSaving) {
+        _model = State(initialValue: .mocked(for: activity, backups: backups))
     }
 
     var body: some View {
@@ -130,17 +131,14 @@ private struct ResultsStep: View {
 // MARK: - Mock wiring
 
 extension RecommendationFlowViewModel {
-    /// Backups outlive one sheet so saving the same place twice shows the duplicate toast.
-    private static let mockBackups = InMemoryBackupRepository()
-
-    /// A view model on the bundled places, a mock location service and in-memory backups.
+    /// A view model on the bundled places, the given backup saver and a mock location service.
     /// Launch with `-m2LocationDenied` to make the permission dialog end in "Don't Allow".
-    static func mocked(for activity: ItineraryActivity) -> RecommendationFlowViewModel {
+    static func mocked(for activity: ItineraryActivity, backups: BackupSaving) -> RecommendationFlowViewModel {
         let denied = ProcessInfo.processInfo.arguments.contains("-m2LocationDenied")
         return RecommendationFlowViewModel(
             activity: activity,
             getAlternatives: GetAlternativesUseCase(places: BundledPlaceRepository()),
-            backups: RepositoryBackupSaver(repository: mockBackups),
+            backups: backups,
             location: MockLocationService(
                 status: .notDetermined,
                 statusAfterRequest: denied ? .denied : .authorizedWhenInUse,

@@ -6,13 +6,28 @@ import SwiftUI
 struct RootView: View {
     @Environment(AppRouter.self) private var router
     @State private var replaceViewModel: ReplaceViewModel
-    
-    init() {
-        // Temporary dependencies until the Core Data repositories are available.
+    @State private var backupsListViewModel: BackupsListViewModel
+
+    private let saveBackup: SaveBackupUseCase
+    private let fetchDayActivities: FetchDayActivitiesUseCase
+    /// Temporary: M1 does not store trips yet, so Backups and Use backup use the sample trip.
+    private let currentTrip = PreviewSamples.trip
+
+    init(persistence: PersistenceController) {
+        // Temporary until M1's Core Data activity repository is available.
         let activityRepository = MockActivityRepository(
             activities: [PreviewSamples.coastalWalk]
         )
-        let backupRepository = MockBackupRepository()
+        // One backup repository for the whole app, so M2, M3 and M4 see the same backups.
+        let backupRepository = CoreDataBackupRepository(container: persistence.container)
+        saveBackup = SaveBackupUseCase(repository: backupRepository)
+        fetchDayActivities = FetchDayActivitiesUseCase(repository: activityRepository)
+        _backupsListViewModel = State(
+            initialValue: BackupsListViewModel(
+                fetchBackups: FetchBackupsUseCase(repository: backupRepository),
+                removeBackup: RemoveBackupUseCase(repository: backupRepository)
+            )
+        )
 
         _replaceViewModel = State(
             initialValue: ReplaceViewModel(
@@ -47,7 +62,7 @@ struct RootView: View {
             .tag(AppTab.itinerary)
 
             NavigationStack {
-                BackupsListView()
+                BackupsListView(viewModel: backupsListViewModel, trip: currentTrip)
             }
             .tabItem { Label("Backups", systemImage: "bookmark") }
             .tag(AppTab.backups)
@@ -63,11 +78,15 @@ struct RootView: View {
             NavigationStack {
                 switch route {
                 case .disruptionFlow(let activity):
-                    RecommendationFlowView(activity: activity)
+                    RecommendationFlowView(activity: activity, backups: saveBackup)
                 case .replaceConfirmation(let original, let alternative):
                     ReplaceConfirmationView(original: original, alternative: alternative)
                 case .useBackup(let backup):
-                    UseBackupView(backup: backup)
+                    UseBackupView(
+                        backup: backup,
+                        viewModel: UseBackupViewModel(backup: backup, fetchDayActivities: fetchDayActivities),
+                        trip: currentTrip
+                    )
                 }
             }
         }
@@ -79,6 +98,8 @@ struct RootView: View {
 }
 
 #Preview {
-    RootView()
-        .environment(AppRouter())
+    if let persistence = try? PersistenceController(inMemory: true) {
+        RootView(persistence: persistence)
+            .environment(AppRouter())
+    }
 }
