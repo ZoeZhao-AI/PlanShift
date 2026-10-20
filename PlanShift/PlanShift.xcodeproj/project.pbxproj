@@ -62,6 +62,17 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A51D74013085000000000001 /* Exceptions for "PlanShift" folder in "PlanShiftWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Features/M5_Settings/Widget/WidgetActivityLink.swift,
+				Features/M5_Settings/Widget/WidgetActivityTimeline.swift,
+				Shared/DesignSystem/AppColors.swift,
+				Shared/Domain/Models/ActivitySetting.swift,
+				Shared/Domain/Models/ItineraryActivity.swift,
+			);
+			target = 9B7DAA7C307F55A50018BFE5 /* PlanShiftWidgetExtension */;
+		};
 		9B7DAA8E307F55A70018BFE5 /* Exceptions for "PlanShiftWidget" folder in "PlanShiftWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -82,6 +93,7 @@
 		9B7DAA51307F52FE0018BFE5 /* PlanShift */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				A51D74013085000000000001 /* Exceptions for "PlanShift" folder in "PlanShiftWidgetExtension" target */,
 				9B7DABD9307F5E0A0018BFE5 /* Exceptions for "PlanShift" folder in "PlanShift" target */,
 			);
 			path = PlanShift;
