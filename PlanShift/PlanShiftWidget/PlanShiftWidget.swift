@@ -23,7 +23,7 @@ struct NextActivityProvider: TimelineProvider {
 }
 
 struct PlanShiftWidget: Widget {
-    let kind = "PlanShiftWidget"
+    let kind = WidgetActivityTimeline.widgetKind
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: NextActivityProvider()) { entry in
