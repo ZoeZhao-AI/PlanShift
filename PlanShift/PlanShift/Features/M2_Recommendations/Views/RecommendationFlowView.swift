@@ -13,7 +13,8 @@ import SwiftUI
 /// so none of them needs to know about use cases or repositories.
 ///
 /// Bookmarks go through `backups` (M4's `SaveBackupUseCase`), so they land in the Backups tab.
-/// Location comes from `CoreLocationService` (When In Use, one fix, asked only after the pre-prompt).
+/// Location comes from M5's shared `CoreLocationService` (When In Use, one fix, asked only after the pre-prompt),
+/// the same instance the Settings screens read, so the permission status is the same everywhere.
 struct RecommendationFlowView: View {
     @State private var model: RecommendationFlowViewModel
     @State private var showsFilters = false
@@ -130,13 +131,13 @@ private struct ResultsStep: View {
 // MARK: - Wiring
 
 extension RecommendationFlowViewModel {
-    /// A view model on the bundled places, the given backup saver and the system location service.
+    /// A view model on the bundled places, the given backup saver and M5's location service.
     static func live(for activity: ItineraryActivity, backups: BackupSaving) -> RecommendationFlowViewModel {
         RecommendationFlowViewModel(
             activity: activity,
             getAlternatives: GetAlternativesUseCase(places: BundledPlaceRepository()),
             backups: backups,
-            location: CoreLocationService()
+            location: CoreLocationService.shared
         )
     }
 }

@@ -76,6 +76,17 @@
 			);
 			target = 9B7DAA4E307F52FE0018BFE5 /* PlanShift */;
 		};
+		A51D74013085000000000001 /* Exceptions for "PlanShift" folder in "PlanShiftWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Features/M5_Settings/Widget/WidgetActivityLink.swift,
+				Features/M5_Settings/Widget/WidgetActivityTimeline.swift,
+				Shared/DesignSystem/AppColors.swift,
+				Shared/Domain/Models/ActivitySetting.swift,
+				Shared/Domain/Models/ItineraryActivity.swift,
+			);
+			target = 9B7DAA7C307F55A50018BFE5 /* PlanShiftWidgetExtension */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -83,6 +94,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				9B7DABD9307F5E0A0018BFE5 /* Exceptions for "PlanShift" folder in "PlanShift" target */,
+				A51D74013085000000000001 /* Exceptions for "PlanShift" folder in "PlanShiftWidgetExtension" target */,
 			);
 			path = PlanShift;
 			sourceTree = "<group>";
