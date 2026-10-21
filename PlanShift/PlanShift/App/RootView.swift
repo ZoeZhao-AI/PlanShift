@@ -14,9 +14,9 @@ struct RootView: View {
     private let currentTrip = PreviewSamples.trip
 
     init(persistence: PersistenceController) {
-        // Temporary until M1's Core Data activity repository is available.
-        let activityRepository = MockActivityRepository(
-            activities: [PreviewSamples.coastalWalk]
+        
+        let activityRepository = CoreDataActivityRepository(
+            container: persistence.container
         )
         // One backup repository for the whole app, so M2, M3 and M4 see the same backups.
         let backupRepository = CoreDataBackupRepository(container: persistence.container)
