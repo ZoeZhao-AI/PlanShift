@@ -18,6 +18,7 @@ final class ReplaceViewModel {
 
     private let replaceActivity: ReplaceActivityUseCase
     private let undoReplace: UndoReplaceUseCase
+    private let widgetReloader: WidgetTimelineReloader
 
     var canUndo: Bool {
         originalActivity != nil
@@ -25,10 +26,12 @@ final class ReplaceViewModel {
 
     init(
         replaceActivity: ReplaceActivityUseCase,
-        undoReplace: UndoReplaceUseCase
+        undoReplace: UndoReplaceUseCase,
+        widgetReloader: WidgetTimelineReloader? = nil
     ) {
         self.replaceActivity = replaceActivity
         self.undoReplace = undoReplace
+        self.widgetReloader = widgetReloader ?? WidgetTimelineReloader()
     }
 
     func confirm(
@@ -51,6 +54,7 @@ final class ReplaceViewModel {
 
             originalActivity = original
             replacementName = alternative.name
+            widgetReloader.requestReload()
             return true
         } catch {
             errorMessage = error.localizedDescription
@@ -75,6 +79,7 @@ final class ReplaceViewModel {
 
             self.originalActivity = nil
             replacementName = nil
+            widgetReloader.requestReload()
             return true
         } catch {
             errorMessage = error.localizedDescription
