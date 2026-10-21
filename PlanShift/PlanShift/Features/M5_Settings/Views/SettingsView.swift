@@ -123,12 +123,27 @@ struct SettingsView: View {
                 }
 
                 settingsSection("APPEARANCE") {
-                    settingsRow(
-                        "Appearance",
-                        icon: "moon",
-                        color: AppColors.outOfTime,
-                        value: "Automatic"
-                    )
+                    Menu {
+                        Picker(
+                            "Appearance",
+                            selection: Binding(
+                                get: { preferencesModel.appearance },
+                                set: { preferencesModel.setAppearance($0) }
+                            )
+                        ) {
+                            ForEach(AppearanceOption.allCases) { option in
+                                Text(option.title).tag(option)
+                            }
+                        }
+                    } label: {
+                        settingsRow(
+                            "Appearance",
+                            icon: "moon",
+                            color: AppColors.outOfTime,
+                            value: preferencesModel.appearance.title
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
 
                 settingsSection("ABOUT") {

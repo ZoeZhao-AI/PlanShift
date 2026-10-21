@@ -12,12 +12,25 @@ import Observation
 @Observable
 final class SettingsPreferencesViewModel {
     private(set) var filters: PreferenceFilters
+    private(set) var appearance: AppearanceOption
 
     private let savePreferences: SaveDefaultPreferencesUseCase
+    private let saveAppearance: SaveAppearanceUseCase
 
-    init(store: UserDefaultsPreferenceStore) {
+    init(
+        store: UserDefaultsPreferenceStore,
+        appearanceStore: UserDefaultsAppearanceStore? = nil
+    ) {
+        let appearanceStore =
+            appearanceStore ?? UserDefaultsAppearanceStore()
+
         filters = LoadDefaultPreferencesUseCase(store: store).execute()
+        appearance = LoadAppearanceUseCase(
+            store: appearanceStore
+        ).execute()
+
         savePreferences = SaveDefaultPreferencesUseCase(store: store)
+        saveAppearance = SaveAppearanceUseCase(store: appearanceStore)
     }
 
     func setBudget(_ budget: BudgetOption) {
@@ -33,5 +46,10 @@ final class SettingsPreferencesViewModel {
     func setMaxDistance(_ distance: DistanceOption) {
         filters.maxDistance = distance
         savePreferences.execute(filters)
+    }
+
+    func setAppearance(_ appearance: AppearanceOption) {
+        self.appearance = appearance
+        saveAppearance.execute(appearance)
     }
 }

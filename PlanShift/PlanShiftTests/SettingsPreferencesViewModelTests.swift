@@ -66,6 +66,57 @@ final class SettingsPreferencesViewModelTests: XCTestCase {
             XCTAssertEqual(store.load(), expected)
         }
     }
+    
+    @MainActor
+    func testInitialStateLoadsSavedAppearance() throws {
+        try withAppearanceStore { appearanceStore in
+            try withStore { preferenceStore in
+                appearanceStore.save(.dark)
+
+                let model = SettingsPreferencesViewModel(
+                    store: preferenceStore,
+                    appearanceStore: appearanceStore
+                )
+
+                XCTAssertEqual(model.appearance, .dark)
+            }
+        }
+    }
+
+    @MainActor
+    func testChangingAppearanceSavesAndPreservesPreferences() throws {
+        try withAppearanceStore { appearanceStore in
+            try withStore { preferenceStore in
+                let model = SettingsPreferencesViewModel(
+                    store: preferenceStore,
+                    appearanceStore: appearanceStore
+                )
+                let originalFilters = model.filters
+
+                model.setAppearance(.light)
+
+                XCTAssertEqual(model.appearance, .light)
+                XCTAssertEqual(appearanceStore.load(), .light)
+                XCTAssertEqual(model.filters, originalFilters)
+                XCTAssertEqual(preferenceStore.load(), originalFilters)
+            }
+        }
+    }
+
+    @MainActor
+    private func withAppearanceStore(
+        _ body: (UserDefaultsAppearanceStore) throws -> Void
+    ) throws {
+        let suiteName = "SettingsAppearanceTests.\(UUID())"
+        let defaults = try XCTUnwrap(
+            UserDefaults(suiteName: suiteName)
+        )
+        defer {
+            defaults.removePersistentDomain(forName: suiteName)
+        }
+
+        try body(UserDefaultsAppearanceStore(defaults: defaults))
+    }
 
     @MainActor
     private func withStore(
