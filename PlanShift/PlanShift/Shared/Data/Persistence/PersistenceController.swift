@@ -17,6 +17,18 @@ final class PersistenceController {
         case modelNotFound
         case appGroupUnavailable
     }
+    
+    private static let sharedModel: Result<NSManagedObjectModel, Error> = Result {
+        guard let modelURL = Bundle.main.url(
+            forResource: "PlanShiftModel",
+            withExtension: "momd"
+        ),
+        let model = NSManagedObjectModel(contentsOf: modelURL) else {
+            throw PersistenceError.modelNotFound
+        }
+
+        return model
+    }
 
     let container: NSPersistentContainer
 
@@ -25,13 +37,7 @@ final class PersistenceController {
     }
 
     init(inMemory: Bool = false) throws {
-        guard let modelURL = Bundle.main.url(
-            forResource: "PlanShiftModel",
-            withExtension: "momd"
-        ),
-        let model = NSManagedObjectModel(contentsOf: modelURL) else {
-            throw PersistenceError.modelNotFound
-        }
+        let model = try Self.sharedModel.get()
 
         container = NSPersistentContainer(
             name: "PlanShiftModel",
