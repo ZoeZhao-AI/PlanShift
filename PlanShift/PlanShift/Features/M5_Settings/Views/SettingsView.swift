@@ -148,11 +148,16 @@ struct SettingsView: View {
 
                 settingsSection("ABOUT") {
                     VStack(spacing: 0) {
-                        settingsRow(
-                            "Privacy Policy",
-                            icon: "shield",
-                            color: AppColors.textSecondary
-                        )
+                        NavigationLink {
+                            PrivacyPolicyView()
+                        } label: {
+                            settingsRow(
+                                "Privacy Policy",
+                                icon: "shield",
+                                color: AppColors.textSecondary
+                            )
+                        }
+                        .buttonStyle(.plain)
 
                         Divider()
 
