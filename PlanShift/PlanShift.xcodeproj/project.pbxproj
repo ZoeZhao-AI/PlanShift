@@ -51,7 +51,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		82E924883087858F00A52769 /* PlanShift.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = PlanShift.xctestplan; sourceTree = "<group>"; };
 		9B7DAA4F307F52FE0018BFE5 /* PlanShift.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PlanShift.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9B7DAA5C307F53010018BFE5 /* PlanShiftTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PlanShiftTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9B7DAA66307F53010018BFE5 /* PlanShiftUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PlanShiftUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -157,7 +156,7 @@
 		9B7DAA46307F52FE0018BFE5 = {
 			isa = PBXGroup;
 			children = (
-                        C6700F00307FAC9F00B6B3DB /* PlanShift.xctestplan */,
+				C6700F00307FAC9F00B6B3DB /* PlanShift.xctestplan */,
 				9B7DAA94307F56620018BFE5 /* PlanShiftWidgetExtension.entitlements */,
 				9B7DAA51307F52FE0018BFE5 /* PlanShift */,
 				9B7DAA5F307F53010018BFE5 /* PlanShiftTests */,
