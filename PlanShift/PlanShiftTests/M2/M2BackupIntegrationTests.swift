@@ -24,7 +24,7 @@ final class M2BackupIntegrationTests: XCTestCase {
             activity: activity,
             getAlternatives: GetAlternativesUseCase(places: BundledPlaceRepository()),
             backups: backups,
-            location: MockLocationService()
+            location: NoLocation()
         )
     }
 
@@ -117,4 +117,12 @@ private final class SpyBackupSaver: BackupSaving, @unchecked Sendable {
     func save(place: Place, for activity: ItineraryActivity) async throws {
         lock.withLock { calls.append((place, activity)) }
     }
+}
+
+/// Location is irrelevant to the backup tests: permission is undecided and there is never a fix.
+@MainActor
+private final class NoLocation: LocationProviding {
+    var authorizationStatus: LocationAuthorizationStatus { .notDetermined }
+    func requestWhenInUseAuthorization() async -> LocationAuthorizationStatus { .notDetermined }
+    func currentLocation() async -> GeoCoordinate? { nil }
 }

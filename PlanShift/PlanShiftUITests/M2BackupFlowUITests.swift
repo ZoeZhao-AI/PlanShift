@@ -80,6 +80,82 @@ final class M2BackupFlowUITests: XCTestCase {
         snapshot(app, "11-backups-with-original")
     }
 
+    // MARK: - Real location permission
+    //
+    // These use the real iOS permission dialog and `CoreLocationService`, so they need the permission reset and a
+    // simulated position first. They are skipped unless REAL_LOCATION_TEST=1 is passed to the test runner:
+    //
+    //   xcrun simctl privacy booted reset location com.utsstudent.zhaoziying.PlanShift
+    //   xcrun simctl location booted set -33.8688,151.2093
+    //   TEST_RUNNER_REAL_LOCATION_TEST=1 xcodebuild test -only-testing:PlanShiftUITests/M2BackupFlowUITests/<name> ...
+
+    /// "Allow While Using App" → ranking uses the device position (Sydney CBD), so the footnote says so.
+    @MainActor
+    func testRealLocationAllowWhileUsing() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["REAL_LOCATION_TEST"] == "1", "Needs the real-permission setup above")
+        answerSystemLocationAlert(with: ["Allow While Using App", "Allow Once"])
+        let app = XCUIApplication()
+        app.launch()
+        startRainyFlowWithWideDistance(app)
+
+        tap(app.buttons["Allow location"], in: app, "Allow location")
+        let bookmark = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Backup '")).firstMatch
+        XCTAssertTrue(waitForSystemAlertThenExist(bookmark, in: app), "No results after allowing location")
+        snapshot(app, "40-real-location-allowed")
+        let footnote = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'from your location'")).firstMatch
+        if !footnote.exists { app.swipeUp() }
+        XCTAssertTrue(footnote.waitForExistence(timeout: 5), "Distances were not measured from the device location")
+    }
+
+    /// "Don't Allow" → graceful banner, ranking falls back to the planned activity.
+    @MainActor
+    func testRealLocationDontAllow() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["REAL_LOCATION_TEST"] == "1", "Needs the real-permission setup above")
+        answerSystemLocationAlert(with: ["Don\u{2019}t Allow", "Don't Allow"])
+        let app = XCUIApplication()
+        app.launch()
+        startRainyFlowWithWideDistance(app)
+
+        tap(app.buttons["Allow location"], in: app, "Allow location")
+        let bookmark = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Backup '")).firstMatch
+        XCTAssertTrue(waitForSystemAlertThenExist(bookmark, in: app), "Ranking must still work after Don't Allow")
+        snapshot(app, "41-real-location-denied")
+        XCTAssertTrue(
+            app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Location is off'")).firstMatch.waitForExistence(timeout: 5),
+            "Location-off banner missing"
+        )
+    }
+
+    @MainActor
+    private func startRainyFlowWithWideDistance(_ app: XCUIApplication) {
+        tap(app.buttons["Activity Detail"], in: app, "Activity Detail button")
+        tap(app.buttons["Plan Disrupted"], in: app, "Plan Disrupted button")
+        tap(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Rainy weather'")).firstMatch, in: app, "Rainy weather")
+        tap(app.buttons["5 km+"], in: app, "5 km+")
+        app.buttons["Show alternatives"].tap()
+    }
+
+    @MainActor
+    private func answerSystemLocationAlert(with labels: [String]) {
+        addUIInterruptionMonitor(withDescription: "Location permission") { alert in
+            for label in labels where alert.buttons[label].exists {
+                alert.buttons[label].tap()
+                return true
+            }
+            return false
+        }
+    }
+
+    /// The interruption monitor only fires when the test interacts with the app, so nudge it while waiting.
+    @MainActor
+    private func waitForSystemAlertThenExist(_ element: XCUIElement, in app: XCUIApplication) -> Bool {
+        for _ in 0..<6 {
+            if element.waitForExistence(timeout: 3) { return true }
+            app.tap()
+        }
+        return element.exists
+    }
+
     // MARK: - Flow
 
     /// Itinerary → disruption flow → results (widening the 3 km filter if needed) → bookmarks result #1.

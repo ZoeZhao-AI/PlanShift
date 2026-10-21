@@ -73,7 +73,9 @@ final class CoreLocationService: NSObject, LocationProviding, CLLocationManagerD
 
     func currentLocation() async -> GeoCoordinate? {
         await refreshAuthorizationStatus()
-        guard !Task.isCancelled, UIApplication.shared.applicationState == .active,
+        // `.inactive` is still foreground: it is the state right after the system permission dialog closes,
+        // and requiring `.active` here made the first search after "Allow" silently skip the device position.
+        guard !Task.isCancelled, UIApplication.shared.applicationState != .background,
               authorizationStatus.isAuthorized else { return nil }
         let id = UUID()
         return await withTaskCancellationHandler {
