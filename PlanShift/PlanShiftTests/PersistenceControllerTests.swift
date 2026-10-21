@@ -54,4 +54,18 @@ final class PersistenceControllerTests: XCTestCase {
             FileManager.default.fileExists(atPath: storeURL.path)
         )
     }
+    
+    @MainActor
+    func testControllersShareManagedObjectModel() throws {
+        let first = try PersistenceController(inMemory: true)
+        let second = try PersistenceController(inMemory: true)
+
+        XCTAssertTrue(
+            first.container.managedObjectModel ===
+            second.container.managedObjectModel
+        )
+
+        XCTAssertFalse(first.container === second.container)
+        XCTAssertFalse(first.viewContext === second.viewContext)
+    }
 }
