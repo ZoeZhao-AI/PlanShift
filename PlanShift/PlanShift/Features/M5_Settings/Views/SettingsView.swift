@@ -5,18 +5,31 @@ import SwiftUI
 @MainActor
 struct SettingsView: View {
     @State private var locationModel: LocationPermissionViewModel
-        private let location: any LocationProviding
+    @State private var preferencesModel: SettingsPreferencesViewModel
 
-        init() {
-            self.init(location: CoreLocationService.shared)
-        }
+    private let location: any LocationProviding
 
-        init(location: any LocationProviding) {
-            self.location = location
-            _locationModel = State(
-                initialValue: LocationPermissionViewModel(location: location)
-            )
-        }
+    init() {
+        self.init(location: CoreLocationService.shared)
+    }
+
+    init(
+        location: any LocationProviding,
+        preferenceStore: UserDefaultsPreferenceStore? = nil
+    ) {
+        self.location = location
+
+        let store = preferenceStore ?? UserDefaultsPreferenceStore()
+
+        _locationModel = State(
+            initialValue: LocationPermissionViewModel(location: location)
+        )
+
+        _preferencesModel = State(
+            initialValue: SettingsPreferencesViewModel(store: store)
+        )
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
@@ -39,31 +52,74 @@ struct SettingsView: View {
 
                 settingsSection("DEFAULT PREFERENCES") {
                     VStack(spacing: 0) {
-                        settingsRow(
-                            "Budget",
-                            icon: "dollarsign.circle",
-                            color: AppColors.delay,
-                            value: BudgetOption.under30.title
-                        )
+                        Menu {
+                            Picker(
+                                "Budget",
+                                selection: Binding(
+                                    get: { preferencesModel.filters.budget },
+                                    set: { preferencesModel.setBudget($0) }
+                                )
+                            ) {
+                                ForEach(BudgetOption.allCases) { option in
+                                    Text(option.title).tag(option)
+                                }
+                            }
+                        } label: {
+                            settingsRow(
+                                "Budget",
+                                icon: "dollarsign.circle",
+                                color: AppColors.delay,
+                                value: preferencesModel.filters.budget.title
+                            )
+                        }
 
                         Divider()
 
-                        settingsRow(
-                            "Indoor / outdoor",
-                            icon: "umbrella",
-                            color: AppColors.outOfTime,
-                            value: SettingPreference.any.title
-                        )
+                        Menu {
+                            Picker(
+                                "Indoor / outdoor",
+                                selection: Binding(
+                                    get: { preferencesModel.filters.setting },
+                                    set: { preferencesModel.setSetting($0) }
+                                )
+                            ) {
+                                ForEach(SettingPreference.allCases) { option in
+                                    Text(option.title).tag(option)
+                                }
+                            }
+                        } label: {
+                            settingsRow(
+                                "Indoor / outdoor",
+                                icon: "umbrella",
+                                color: AppColors.outOfTime,
+                                value: preferencesModel.filters.setting.title
+                            )
+                        }
 
                         Divider()
 
-                        settingsRow(
-                            "Max distance",
-                            icon: "figure.walk",
-                            color: AppColors.rainy,
-                            value: DistanceOption.threeKm.title
-                        )
+                        Menu {
+                            Picker(
+                                "Max distance",
+                                selection: Binding(
+                                    get: { preferencesModel.filters.maxDistance },
+                                    set: { preferencesModel.setMaxDistance($0) }
+                                )
+                            ) {
+                                ForEach(DistanceOption.allCases) { option in
+                                    Text(option.title).tag(option)
+                                }
+                            }
+                        } label: {
+                            settingsRow(
+                                "Max distance",
+                                icon: "figure.walk",
+                                color: AppColors.rainy,
+                                value: preferencesModel.filters.maxDistance.title
+                            )
+                        }
                     }
+                    .buttonStyle(.plain)
                 }
 
                 settingsSection("APPEARANCE") {
@@ -105,7 +161,7 @@ struct SettingsView: View {
         .navigationBarTitleDisplayMode(.large)
         .accessibilityIdentifier("M5-06")
     }
-    
+
     private var locationStatusTitle: String {
         switch locationModel.status {
         case .notDetermined:
@@ -214,6 +270,7 @@ struct SettingsView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .frame(minHeight: 44)
+        .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
     }
 }
@@ -223,6 +280,9 @@ struct SettingsView: View {
         SettingsView(
             location: LocationPreviewService(
                 status: .authorizedWhenInUse
+            ),
+            preferenceStore: UserDefaultsPreferenceStore(
+                defaults: UserDefaults()
             )
         )
     }
