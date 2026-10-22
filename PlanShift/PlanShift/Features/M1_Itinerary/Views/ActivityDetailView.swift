@@ -20,10 +20,6 @@ struct ActivityDetailView: View {
     private let repository: any ActivityRepository
     private let tripRepository: any TripRepository
 
-    private let primaryGreen = Color(
-        red: 0.02, green: 0.49, blue: 0.43
-    )
-
     init(
         activityId: UUID,
         repository: any ActivityRepository =
@@ -53,19 +49,9 @@ struct ActivityDetailView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .foregroundStyle(AppColors.textPrimary)
-        .background(
-            LinearGradient(
-                colors: [
-                    Color(red: 0.91, green: 0.96, blue: 1.0),
-                    Color(red: 0.89, green: 0.98, blue: 0.94)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-        )
-        .toolbar(.hidden, for: .navigationBar)
+        .m1ScreenBackground()
+        .navigationTitle(activity?.name ?? "Activity")
+        .navigationBarTitleDisplayMode(.inline)
         .task {
             await loadActivity()
         }
@@ -111,170 +97,90 @@ struct ActivityDetailView: View {
     private func activityContent(
         _ activity: ItineraryActivity
     ) -> some View {
+        let minutes = max(0, Int(activity.endTime.timeIntervalSince(activity.startTime) / 60))
+        let durationText = Duration.seconds(minutes * 60)
+            .formatted(.units(allowed: [.hours, .minutes], width: .abbreviated))
 
-        ScrollView {
-            VStack(alignment: .leading, spacing: 14) {
-
-                // Back navigation
-                Button {
-                    if !router.itineraryPath.isEmpty {
-                        router.itineraryPath.removeLast()
+        return ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                ActivityPhotoView(activity: activity)
+                    .frame(height: 220)
+                    .frame(maxWidth: .infinity)
+                    .overlay(alignment: .bottomLeading) {
+                        SettingPill(setting: activity.setting)
+                            .padding(12)
                     }
-                } label: {
-                    Label("Day 1", systemImage: "chevron.left")
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(activity.name)
+                        .font(.title.bold())
+
+                    Label(activity.locationName, systemImage: "mappin.and.ellipse")
                         .font(.subheadline)
-                        .foregroundStyle(primaryGreen)
-                }
-                .padding(.bottom, 4)
+                        .foregroundStyle(.secondary)
 
-                // Activity illustration placeholder
-                ZStack(alignment: .bottomLeading) {
-                    RoundedRectangle(cornerRadius: 17)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color(red: 0.65, green: 0.86, blue: 0.98),
-                                    Color(red: 0.41, green: 0.77, blue: 0.58)
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-
-                    Image(systemName: "mountain.2.fill")
-                        .font(.system(size: 85))
-                        .foregroundStyle(.green.opacity(0.55))
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                    Text(activity.setting.title)
-                        .font(.caption.bold())
-                        .foregroundStyle(primaryGreen)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(.white, in: Capsule())
-                        .padding(12)
-                }
-                .frame(height: 195)
-
-                // Activity title
-                Text(activity.name)
-                    .font(.system(size: 27, weight: .bold))
-
-                Label(
-                    activity.locationName,
-                    systemImage: "mappin"
-                )
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-                Text(
-                    activity.date.formatted(
-                        date: .abbreviated,
-                        time: .omitted
+                    Label(
+                        activity.date.formatted(date: .complete, time: .omitted),
+                        systemImage: "calendar"
                     )
-                )
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                }
+                .accessibilityElement(children: .combine)
 
-                // Three information cards
-                HStack(spacing: 8) {
-
+                HStack(alignment: .top, spacing: 10) {
                     infoCard(
                         "Starts",
-                        activity.startTime.formatted(
-                            date: .omitted,
-                            time: .shortened
-                        ),
-                        "until " +
-                        activity.endTime.formatted(
-                            date: .omitted,
-                            time: .shortened
-                        )
+                        activity.startTime.formatted(date: .omitted, time: .shortened),
+                        "until " + activity.endTime.formatted(date: .omitted, time: .shortened)
                     )
-
-                    let duration = max(
-                        0,
-                        Int(
-                            activity.endTime.timeIntervalSince(
-                                activity.startTime
-                            ) / 60
-                        )
-                    )
-
-                    infoCard(
-                        "Duration",
-                        "\(duration / 60) hrs " +
-                        "\(duration % 60) min",
-                        "planned"
-                    )
-
+                    infoCard("Duration", durationText, "planned")
                     infoCard(
                         "Est. cost",
-                        "$\(activity.estimatedCost)",
+                        activity.estimatedCost == 0
+                            ? "Free"
+                            : activity.estimatedCost.formatted(.currency(code: "AUD")),
                         "per person"
                     )
                 }
 
-                // Find alternatives
                 Button {
-                    router.present(
-                        .disruptionFlow(activity: activity)
-                    )
+                    router.present(.disruptionFlow(activity: activity))
                 } label: {
-                    Label(
-                        "Find alternatives",
-                        systemImage: "arrow.left.arrow.right"
-                    )
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 15)
-                    .foregroundStyle(.white)
-                    .background(
-                        primaryGreen,
-                        in: RoundedRectangle(cornerRadius: 12)
-                    )
+                    Label("Find alternatives", systemImage: "arrow.left.arrow.right")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity, minHeight: 44)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.borderedProminent)
+            .tint(AppColors.ctaFill)
+            .tint(AppColors.ctaFill)
+                .controlSize(.large)
 
-                // Edit and Delete
-                HStack(spacing: 10) {
-
+                HStack(spacing: 12) {
                     Button {
                         isShowingEditForm = true
                     } label: {
-                        Label(
-                            "Edit",
-                            systemImage: "pencil"
-                        )
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 13)
-                        .background(
-                            .white,
-                            in: RoundedRectangle(cornerRadius: 10)
-                        )
+                        Label("Edit", systemImage: "pencil")
+                            .frame(maxWidth: .infinity, minHeight: 44)
                     }
-                    .foregroundStyle(.primary)
+                    .buttonStyle(.bordered)
+                    .controlSize(.large)
 
-                    Button {
+                    Button(role: .destructive) {
                         isShowingDeleteConfirmation = true
                     } label: {
-                        Label(
-                            "Delete",
-                            systemImage: "trash"
-                        )
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 13)
-                        .background(
-                            .white,
-                            in: RoundedRectangle(cornerRadius: 10)
-                        )
+                        Label("Delete", systemImage: "trash")
+                            .frame(maxWidth: .infinity, minHeight: 44)
                     }
-                    .foregroundStyle(.red)
+                    .buttonStyle(.bordered)
+                    .controlSize(.large)
                     .disabled(isDeleting)
                 }
 
                 if isDeleting {
                     ProgressView("Deleting activity...")
+                        .frame(maxWidth: .infinity)
                 }
             }
             .padding(16)
@@ -292,7 +198,7 @@ struct ActivityDetailView: View {
             }
         } message: {
             Text(
-                "This removes it from Day 1. Your saved backups won't change."
+                "This removes it from \(activity.date.formatted(.dateTime.weekday(.wide).day().month(.wide))). Your saved backups won't change."
             )
         }
     }
@@ -302,29 +208,23 @@ struct ActivityDetailView: View {
         _ value: String,
         _ subtitle: String
     ) -> some View {
-
-        VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: 4) {
             Text(title)
-                .font(.caption2)
+                .font(.caption)
                 .foregroundStyle(.secondary)
 
             Text(value)
-                .font(.subheadline.bold())
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
+                .font(.subheadline.weight(.semibold))
+                .minimumScaleFactor(0.8)
 
             Text(subtitle)
-                .font(.caption2)
+                .font(.caption)
                 .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(10)
-        .background(
-            .white,
-            in: RoundedRectangle(cornerRadius: 12)
-        )
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .padding(12)
+        .m1Card(cornerRadius: 14)
+        .accessibilityElement(children: .combine)
     }
 
     private func loadActivity() async {
