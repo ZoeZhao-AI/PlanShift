@@ -10,14 +10,15 @@ struct RootView: View {
 
     private let saveBackup: SaveBackupUseCase
     private let fetchDayActivities: FetchDayActivitiesUseCase
-    /// Temporary: M1 does not store trips yet, so Backups and Use backup use the sample trip.
-    private let currentTrip = PreviewSamples.trip
+    /// One trip and one activity repository for the whole app, so M1 writes what M2, M3 and M4 read.
+    private let tripRepository: any TripRepository
+    private let activityRepository: any ActivityRepository
 
     init(persistence: PersistenceController) {
-        // Temporary until M1's Core Data activity repository is available.
-        let activityRepository = MockActivityRepository(
-            activities: [PreviewSamples.coastalWalk]
-        )
+        let tripRepository = CoreDataTripRepository(container: persistence.container)
+        let activityRepository = CoreDataActivityRepository(container: persistence.container)
+        self.tripRepository = tripRepository
+        self.activityRepository = activityRepository
         // One backup repository for the whole app, so M2, M3 and M4 see the same backups.
         let backupRepository = CoreDataBackupRepository(container: persistence.container)
         saveBackup = SaveBackupUseCase(repository: backupRepository)
@@ -48,13 +49,19 @@ struct RootView: View {
 
         TabView(selection: $router.selectedTab) {
             NavigationStack(path: $router.itineraryPath) {
-                ItineraryView()
+                ItineraryView(tripRepository: tripRepository, activityRepository: activityRepository)
                     .navigationDestination(for: ItineraryRoute.self) { route in
                         switch route {
-                        case .activityDetail(let activityId): ActivityDetailView(activityId: activityId)
-                        case .activityForm: ActivityFormView()
+                        case .activityDetail(let activityId):
+                            ActivityDetailView(
+                                activityId: activityId,
+                                repository: activityRepository,
+                                tripRepository: tripRepository
+                            )
+                        case .activityForm:
+                            ActivityFormView(tripRepository: tripRepository, activityRepository: activityRepository)
                         case .emptyState: ItineraryEmptyStateView()
-                        case .createTrip: CreateTripView()
+                        case .createTrip: CreateTripView(repository: tripRepository)
                         }
                     }
             }
@@ -62,7 +69,9 @@ struct RootView: View {
             .tag(AppTab.itinerary)
 
             NavigationStack {
-                BackupsListView(viewModel: backupsListViewModel, trip: currentTrip)
+                CurrentTripView(trips: tripRepository, reloadOn: router.selectedTab) { trip in
+                    BackupsListView(viewModel: backupsListViewModel, trip: trip)
+                }
             }
             .tabItem { Label("Backups", systemImage: "bookmark") }
             .tag(AppTab.backups)
@@ -78,15 +87,17 @@ struct RootView: View {
             NavigationStack {
                 switch route {
                 case .disruptionFlow(let activity):
-                    RecommendationFlowView(activity: activity, backups: saveBackup)
+                    RecommendationFlowView(activity: activity, backups: saveBackup, trips: tripRepository)
                 case .replaceConfirmation(let original, let alternative):
                     ReplaceConfirmationView(original: original, alternative: alternative)
                 case .useBackup(let backup):
-                    UseBackupView(
-                        backup: backup,
-                        viewModel: UseBackupViewModel(backup: backup, fetchDayActivities: fetchDayActivities),
-                        trip: currentTrip
-                    )
+                    CurrentTripView(trips: tripRepository, reloadOn: backup.id) { trip in
+                        UseBackupView(
+                            backup: backup,
+                            viewModel: UseBackupViewModel(backup: backup, fetchDayActivities: fetchDayActivities),
+                            trip: trip
+                        )
+                    }
                 }
             }
         }

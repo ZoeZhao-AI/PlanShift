@@ -19,8 +19,8 @@ struct RecommendationFlowView: View {
     @State private var model: RecommendationFlowViewModel
     @State private var showsFilters = false
 
-    init(activity: ItineraryActivity, backups: BackupSaving) {
-        _model = State(initialValue: .live(for: activity, backups: backups))
+    init(activity: ItineraryActivity, backups: BackupSaving, trips: TripRepository? = nil) {
+        _model = State(initialValue: .live(for: activity, backups: backups, trips: trips))
     }
 
     var body: some View {
@@ -132,12 +132,17 @@ private struct ResultsStep: View {
 
 extension RecommendationFlowViewModel {
     /// A view model on the bundled places, the given backup saver and M5's location service.
-    static func live(for activity: ItineraryActivity, backups: BackupSaving) -> RecommendationFlowViewModel {
+    static func live(
+        for activity: ItineraryActivity,
+        backups: BackupSaving,
+        trips: TripRepository? = nil
+    ) -> RecommendationFlowViewModel {
         RecommendationFlowViewModel(
             activity: activity,
             getAlternatives: GetAlternativesUseCase(places: BundledPlaceRepository()),
             backups: backups,
-            location: CoreLocationService.shared
+            location: CoreLocationService.shared,
+            trips: trips
         )
     }
 }
