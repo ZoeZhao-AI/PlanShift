@@ -1,3 +1,4 @@
+
 import SwiftUI
 
 // Module: M1 - Activity Detail
@@ -19,6 +20,10 @@ struct ActivityDetailView: View {
     private let repository: any ActivityRepository
     private let tripRepository: any TripRepository
 
+    private let primaryGreen = Color(
+        red: 0.02, green: 0.49, blue: 0.43
+    )
+
     init(
         activityId: UUID,
         repository: any ActivityRepository =
@@ -35,10 +40,8 @@ struct ActivityDetailView: View {
         Group {
             if isLoading {
                 ProgressView("Loading activity...")
-
             } else if let activity {
                 activityContent(activity)
-
             } else {
                 ContentUnavailableView(
                     "Activity Not Found",
@@ -51,9 +54,18 @@ struct ActivityDetailView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .foregroundStyle(AppColors.textPrimary)
-        .background(AppColors.backgroundGradient)
-        .navigationTitle("Activity Detail")
-        .navigationBarTitleDisplayMode(.inline)
+        .background(
+            LinearGradient(
+                colors: [
+                    Color(red: 0.91, green: 0.96, blue: 1.0),
+                    Color(red: 0.89, green: 0.98, blue: 0.94)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+        )
+        .toolbar(.hidden, for: .navigationBar)
         .task {
             await loadActivity()
         }
@@ -72,21 +84,7 @@ struct ActivityDetailView: View {
                         activityRepository: repository,
                         existingActivity: activity
                     )
-                    .toolbar {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button("Cancel") {
-                                isShowingEditForm = false
-                            }
-                        }
-                    }
                 }
-            }
-        }
-        .deleteConfirmationAlert(
-            isPresented: $isShowingDeleteConfirmation
-        ) {
-            Task {
-                await deleteActivity()
             }
         }
         .alert(
@@ -115,97 +113,218 @@ struct ActivityDetailView: View {
     ) -> some View {
 
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 14) {
 
+                // Back navigation
+                Button {
+                    if !router.itineraryPath.isEmpty {
+                        router.itineraryPath.removeLast()
+                    }
+                } label: {
+                    Label("Day 1", systemImage: "chevron.left")
+                        .font(.subheadline)
+                        .foregroundStyle(primaryGreen)
+                }
+                .padding(.bottom, 4)
+
+                // Activity illustration placeholder
+                ZStack(alignment: .bottomLeading) {
+                    RoundedRectangle(cornerRadius: 17)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color(red: 0.65, green: 0.86, blue: 0.98),
+                                    Color(red: 0.41, green: 0.77, blue: 0.58)
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+
+                    Image(systemName: "mountain.2.fill")
+                        .font(.system(size: 85))
+                        .foregroundStyle(.green.opacity(0.55))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                    Text(activity.setting.title)
+                        .font(.caption.bold())
+                        .foregroundStyle(primaryGreen)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(.white, in: Capsule())
+                        .padding(12)
+                }
+                .frame(height: 195)
+
+                // Activity title
                 Text(activity.name)
-                    .font(.title.bold())
+                    .font(.system(size: 27, weight: .bold))
 
-                Divider()
+                Label(
+                    activity.locationName,
+                    systemImage: "mappin"
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
 
-                detailRow(
-                    "Date",
+                Text(
                     activity.date.formatted(
                         date: .abbreviated,
                         time: .omitted
                     )
                 )
+                .font(.caption)
+                .foregroundStyle(.secondary)
 
-                detailRow(
-                    "Start time",
-                    activity.startTime.formatted(
-                        date: .omitted,
-                        time: .shortened
+                // Three information cards
+                HStack(spacing: 8) {
+
+                    infoCard(
+                        "Starts",
+                        activity.startTime.formatted(
+                            date: .omitted,
+                            time: .shortened
+                        ),
+                        "until " +
+                        activity.endTime.formatted(
+                            date: .omitted,
+                            time: .shortened
+                        )
                     )
-                )
 
-                detailRow(
-                    "End time",
-                    activity.endTime.formatted(
-                        date: .omitted,
-                        time: .shortened
+                    let duration = max(
+                        0,
+                        Int(
+                            activity.endTime.timeIntervalSince(
+                                activity.startTime
+                            ) / 60
+                        )
                     )
-                )
 
-                detailRow(
-                    "Location",
-                    activity.locationName
-                )
+                    infoCard(
+                        "Duration",
+                        "\(duration / 60) hrs " +
+                        "\(duration % 60) min",
+                        "planned"
+                    )
 
-                detailRow(
-                    "Setting",
-                    activity.setting.title
-                )
+                    infoCard(
+                        "Est. cost",
+                        "$\(activity.estimatedCost)",
+                        "per person"
+                    )
+                }
 
-                detailRow(
-                    "Estimated cost",
-                    "AUD \(activity.estimatedCost)"
-                )
-
-                Divider()
-
-                Button("Plan Disrupted") {
+                // Find alternatives
+                Button {
                     router.present(
                         .disruptionFlow(activity: activity)
                     )
+                } label: {
+                    Label(
+                        "Find alternatives",
+                        systemImage: "arrow.left.arrow.right"
+                    )
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 15)
+                    .foregroundStyle(.white)
+                    .background(
+                        primaryGreen,
+                        in: RoundedRectangle(cornerRadius: 12)
+                    )
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.plain)
 
-                Button("Edit Activity") {
-                    isShowingEditForm = true
-                }
-                .buttonStyle(.borderedProminent)
+                // Edit and Delete
+                HStack(spacing: 10) {
 
-                Button(
-                    "Delete Activity",
-                    role: .destructive
-                ) {
-                    isShowingDeleteConfirmation = true
+                    Button {
+                        isShowingEditForm = true
+                    } label: {
+                        Label(
+                            "Edit",
+                            systemImage: "pencil"
+                        )
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .background(
+                            .white,
+                            in: RoundedRectangle(cornerRadius: 10)
+                        )
+                    }
+                    .foregroundStyle(.primary)
+
+                    Button {
+                        isShowingDeleteConfirmation = true
+                    } label: {
+                        Label(
+                            "Delete",
+                            systemImage: "trash"
+                        )
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .background(
+                            .white,
+                            in: RoundedRectangle(cornerRadius: 10)
+                        )
+                    }
+                    .foregroundStyle(.red)
+                    .disabled(isDeleting)
                 }
-                .buttonStyle(.bordered)
-                .disabled(isDeleting)
 
                 if isDeleting {
                     ProgressView("Deleting activity...")
                 }
             }
-            .padding()
+            .padding(16)
+        }
+        .alert(
+            "Delete \"\(activity.name)\"?",
+            isPresented: $isShowingDeleteConfirmation
+        ) {
+            Button("Cancel", role: .cancel) {}
+
+            Button("Delete", role: .destructive) {
+                Task {
+                    await deleteActivity()
+                }
+            }
+        } message: {
+            Text(
+                "This removes it from Day 1. Your saved backups won't change."
+            )
         }
     }
 
-    private func detailRow(
+    private func infoCard(
         _ title: String,
-        _ value: String
+        _ value: String,
+        _ subtitle: String
     ) -> some View {
 
-        HStack(alignment: .top) {
+        VStack(alignment: .leading, spacing: 5) {
             Text(title)
-                .foregroundStyle(AppColors.textSecondary)
-
-            Spacer()
+                .font(.caption2)
+                .foregroundStyle(.secondary)
 
             Text(value)
-                .multilineTextAlignment(.trailing)
+                .font(.subheadline.bold())
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+
+            Text(subtitle)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10)
+        .background(
+            .white,
+            in: RoundedRectangle(cornerRadius: 12)
+        )
     }
 
     private func loadActivity() async {
@@ -219,8 +338,8 @@ struct ActivityDetailView: View {
         }
 
         do {
-            guard let trip = try await
-                tripRepository.fetchCurrentTrip()
+            guard let trip =
+                try await tripRepository.fetchCurrentTrip()
             else {
                 errorMessage = "No trip found."
                 return
@@ -260,9 +379,7 @@ struct ActivityDetailView: View {
         )
 
         do {
-            try await useCase.execute(
-                id: activityId
-            )
+            try await useCase.execute(id: activityId)
 
             if !router.itineraryPath.isEmpty {
                 router.itineraryPath.removeLast()

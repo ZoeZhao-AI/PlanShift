@@ -1,3 +1,4 @@
+
 import SwiftUI
 
 // Module: M1 - Add / Edit Activity
@@ -17,28 +18,39 @@ struct ActivityFormView: View {
     private let existingActivity: ItineraryActivity?
     private let placeRepository: any PlaceRepository
 
+    private let primaryGreen = Color(
+        red: 0.02, green: 0.49, blue: 0.43
+    )
+
+    private let backgroundTop = Color(
+        red: 0.91, green: 0.96, blue: 1.0
+    )
+
+    private let backgroundBottom = Color(
+        red: 0.89, green: 0.98, blue: 0.94
+    )
+
     init(
         tripRepository: any TripRepository =
             M1InMemoryTripRepository.shared,
         activityRepository: any ActivityRepository =
             M1InMemoryActivityRepository.shared,
         existingActivity: ItineraryActivity? = nil,
-        placeRepository: any PlaceRepository = BundledPlaceRepository()
+        placeRepository: any PlaceRepository =
+            BundledPlaceRepository()
     ) {
-        self.placeRepository = placeRepository
         self.tripRepository = tripRepository
         self.activityRepository = activityRepository
         self.existingActivity = existingActivity
+        self.placeRepository = placeRepository
     }
 
     var body: some View {
         Group {
             if let viewModel {
                 activityForm(viewModel)
-
             } else if isLoading {
                 ProgressView("Loading trip...")
-
             } else {
                 ContentUnavailableView(
                     "Unable to Load Activity",
@@ -50,165 +62,300 @@ struct ActivityFormView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(AppColors.backgroundGradient)
-        .navigationTitle(
-            existingActivity == nil
-                ? "Add Activity"
-                : "Edit Activity"
+        .background(
+            LinearGradient(
+                colors: [backgroundTop, backgroundBottom],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
         )
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
+        .toolbar(.hidden, for: .tabBar)
         .task {
             await loadTrip()
-            allPlaces = (try? await placeRepository.fetchAllPlaces()) ?? []
+            allPlaces =
+                (try? await placeRepository.fetchAllPlaces()) ?? []
         }
     }
 
     private func activityForm(
-        _ model: ActivityFormViewModel
+        _ viewModel: ActivityFormViewModel
     ) -> some View {
 
-        @Bindable var model = model
+        @Bindable var model = viewModel
 
-        return Form {
+        let invalidTime = model.endTime <= model.startTime
 
-            Section("Activity details") {
-                TextField(
-                    "Activity name",
-                    text: $model.name
+        return VStack(spacing: 0) {
+
+            // Header
+            HStack {
+                Button("Cancel") {
+                    dismiss()
+                }
+                .foregroundStyle(primaryGreen)
+
+                Spacer()
+
+                Text(
+                    model.isEditing
+                        ? "Edit Activity"
+                        : "New Activity"
                 )
+                .font(.headline)
 
-                TextField(
-                    "Location",
-                    text: $model.locationName
-                )
-                .onChange(of: model.locationName) {
-                    model.locationTextChanged()
-                }
+                Spacer()
 
-                if !model.hasLocation {
-                    ForEach(suggestions(for: model.locationName)) { place in
-                        Button {
-                            model.apply(place)
-                        } label: {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(place.name)
-                                Text("\(place.suburb) · \(place.setting.title)")
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
-                            }
-                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                        }
-                        .foregroundStyle(.primary)
-                    }
-                }
-            }
-
-            Section("Date and time") {
-                DatePicker(
-                    "Date",
-                    selection: $model.date,
-                    displayedComponents: .date
-                )
-
-                DatePicker(
-                    "Start time",
-                    selection: $model.startTime,
-                    displayedComponents: .hourAndMinute
-                )
-
-                DatePicker(
-                    "End time",
-                    selection: $model.endTime,
-                    displayedComponents: .hourAndMinute
-                )
-            }
-
-            Section("Location coordinates") {
-                LabeledContent("Latitude") {
-                    Text(model.hasLocation ? model.latitude.formatted(.number.precision(.fractionLength(5))) : "–")
-                }
-
-                LabeledContent("Longitude") {
-                    Text(model.hasLocation ? model.longitude.formatted(.number.precision(.fractionLength(5))) : "–")
-                }
-            }
-
-            Section("Activity preferences") {
-                Picker(
-                    "Setting",
-                    selection: $model.setting
-                ) {
-                    Text("Indoor")
-                        .tag(ActivitySetting.indoor)
-
-                    Text("Outdoor")
-                        .tag(ActivitySetting.outdoor)
-                }
-
-                LabeledContent("Estimated cost (AUD)") {
-                    TextField(
-                        "Cost",
-                        value: $model.estimatedCost,
-                        format: .number
-                    )
-                    .keyboardType(.decimalPad)
-                    .multilineTextAlignment(.trailing)
-                }
-            }
-
-            if let errorMessage = model.errorMessage {
-                Section {
-                    Label(
-                        errorMessage,
-                        systemImage: "exclamationmark.circle"
-                    )
-                    .foregroundStyle(.red)
-                }
-            }
-
-            Section {
-                Button {
+                Button("Save") {
                     Task {
                         await saveActivity(model)
                     }
-                } label: {
-                    HStack {
-                        Spacer()
-
-                        if model.isSaving {
-                            ProgressView()
-                        }
-
-                        Text(
-                            model.isSaving
-                                ? "Saving..."
-                                : (
-                                    model.isEditing
-                                        ? "Save Changes"
-                                        : "Save Activity"
-                                )
-                        )
-
-                        Spacer()
-                    }
                 }
-                .buttonStyle(.borderedProminent)
+                .fontWeight(.semibold)
+                .foregroundStyle(primaryGreen)
                 .disabled(model.isSaving || !model.hasLocation)
             }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 18)
+
+            ScrollView {
+                VStack(spacing: 12) {
+
+                    // Name and Location
+                    VStack(spacing: 0) {
+
+                        HStack {
+                            Text("Name")
+                                .foregroundStyle(.secondary)
+
+                            TextField(
+                                "Activity name",
+                                text: $model.name
+                            )
+                            .multilineTextAlignment(.trailing)
+                        }
+                        .padding(14)
+
+                        Divider()
+
+                        HStack {
+                            Text("Location")
+                                .foregroundStyle(.secondary)
+
+                            TextField(
+                                "Search location",
+                                text: $model.locationName
+                            )
+                            .multilineTextAlignment(.trailing)
+                            .onChange(of: model.locationName) {
+                                model.locationTextChanged()
+                            }
+                        }
+                        .padding(14)
+
+                        if !model.hasLocation {
+                            ForEach(
+                                suggestions(for: model.locationName)
+                            ) { place in
+                                Divider()
+
+                                Button {
+                                    model.apply(place)
+                                } label: {
+                                    VStack(
+                                        alignment: .leading,
+                                        spacing: 3
+                                    ) {
+                                        Text(place.name)
+                                            .font(.subheadline.bold())
+
+                                        Text(
+                                            "\(place.suburb) · " +
+                                            place.setting.title
+                                        )
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    }
+                                    .frame(
+                                        maxWidth: .infinity,
+                                        alignment: .leading
+                                    )
+                                    .padding(12)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                    .background(
+                        .white,
+                        in: RoundedRectangle(cornerRadius: 15)
+                    )
+
+                    // Date and Time
+                    VStack(spacing: 0) {
+
+                        DatePicker(
+                            "Date",
+                            selection: $model.date,
+                            displayedComponents: .date
+                        )
+                        .padding(12)
+
+                        Divider()
+
+                        DatePicker(
+                            "Start time",
+                            selection: $model.startTime,
+                            displayedComponents: .hourAndMinute
+                        )
+                        .padding(12)
+
+                        Divider()
+
+                        DatePicker(
+                            "End time",
+                            selection: $model.endTime,
+                            displayedComponents: .hourAndMinute
+                        )
+                        .padding(12)
+                        .background(
+                            invalidTime
+                                ? Color.red.opacity(0.07)
+                                : Color.clear
+                        )
+                    }
+                    .background(
+                        .white,
+                        in: RoundedRectangle(cornerRadius: 15)
+                    )
+
+                    if invalidTime {
+                        Label(
+                            "End time must be after start time",
+                            systemImage: "exclamationmark.triangle"
+                        )
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .frame(
+                            maxWidth: .infinity,
+                            alignment: .leading
+                        )
+                    }
+
+                    // Indoor / Outdoor
+                    VStack(spacing: 0) {
+
+                        HStack {
+                            Text("Setting")
+                                .font(.subheadline)
+
+                            Spacer()
+
+                            HStack(spacing: 4) {
+                                settingButton(
+                                    "Indoor",
+                                    setting: .indoor,
+                                    model: model
+                                )
+
+                                settingButton(
+                                    "Outdoor",
+                                    setting: .outdoor,
+                                    model: model
+                                )
+                            }
+                        }
+                        .padding(12)
+
+                        Divider()
+
+                        HStack {
+                            Text("Est. cost")
+                                .font(.subheadline)
+
+                            Spacer()
+
+                            Text("$")
+                                .foregroundStyle(.secondary)
+
+                            TextField(
+                                "0",
+                                value: $model.estimatedCost,
+                                format: .number
+                            )
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 65)
+
+                            Text("per person")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(12)
+                    }
+                    .background(
+                        .white,
+                        in: RoundedRectangle(cornerRadius: 15)
+                    )
+
+                    if let errorMessage = model.errorMessage {
+                        Label(
+                            errorMessage,
+                            systemImage: "exclamationmark.circle"
+                        )
+                        .font(.footnote)
+                        .foregroundStyle(.red)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+            }
+            .scrollDismissesKeyboard(.interactively)
         }
-        .scrollContentBackground(.hidden)
-        .tint(AppColors.primary)
-        .scrollDismissesKeyboard(.interactively)
+        .disabled(model.isSaving)
     }
 
-    /// Up to 5 bundled places whose name or suburb contains what the user typed.
+    private func settingButton(
+        _ title: String,
+        setting: ActivitySetting,
+        model: ActivityFormViewModel
+    ) -> some View {
+        Button {
+            model.setting = setting
+        } label: {
+            Text(title)
+                .font(.caption.bold())
+                .foregroundStyle(
+                    model.setting == setting
+                        ? .white
+                        : .primary
+                )
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(
+                    model.setting == setting
+                        ? primaryGreen
+                        : Color.white,
+                    in: RoundedRectangle(cornerRadius: 9)
+                )
+        }
+        .buttonStyle(.plain)
+    }
+
     private func suggestions(for text: String) -> [Place] {
-        let query = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else { return [] }
+        let query = text.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+
+        guard !query.isEmpty else {
+            return []
+        }
+
         return Array(
             allPlaces.filter {
                 $0.name.localizedCaseInsensitiveContains(query)
-                    || $0.suburb.localizedCaseInsensitiveContains(query)
+                || $0.suburb.localizedCaseInsensitiveContains(query)
             }
             .prefix(5)
         )
@@ -222,7 +369,6 @@ struct ActivityFormView: View {
             return
         }
 
-        // Combine the selected date with the chosen times.
         let calendar = Calendar.current
 
         let startComponents = calendar.dateComponents(
@@ -270,8 +416,8 @@ struct ActivityFormView: View {
         }
 
         do {
-            guard let trip = try await
-                tripRepository.fetchCurrentTrip()
+            guard let trip =
+                try await tripRepository.fetchCurrentTrip()
             else {
                 loadError = "Please create a trip first."
                 return
@@ -279,7 +425,8 @@ struct ActivityFormView: View {
 
             if let existingActivity,
                existingActivity.tripId != trip.id {
-                loadError = "This activity belongs to another trip."
+                loadError =
+                    "This activity belongs to another trip."
                 return
             }
 
@@ -289,8 +436,6 @@ struct ActivityFormView: View {
                 existingActivity: existingActivity
             )
 
-            // Use the trip start date only for new activities.
-            // Keep the original date when editing.
             if existingActivity == nil {
                 viewModel?.date = trip.startDate
             }
