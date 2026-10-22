@@ -10,18 +10,22 @@ struct ActivityFormView: View {
     @State private var viewModel: ActivityFormViewModel?
     @State private var isLoading = true
     @State private var loadError: String?
+    @State private var allPlaces: [Place] = []
 
     private let tripRepository: any TripRepository
     private let activityRepository: any ActivityRepository
     private let existingActivity: ItineraryActivity?
+    private let placeRepository: any PlaceRepository
 
     init(
         tripRepository: any TripRepository =
             M1InMemoryTripRepository.shared,
         activityRepository: any ActivityRepository =
             M1InMemoryActivityRepository.shared,
-        existingActivity: ItineraryActivity? = nil
+        existingActivity: ItineraryActivity? = nil,
+        placeRepository: any PlaceRepository = BundledPlaceRepository()
     ) {
+        self.placeRepository = placeRepository
         self.tripRepository = tripRepository
         self.activityRepository = activityRepository
         self.existingActivity = existingActivity
@@ -55,6 +59,7 @@ struct ActivityFormView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task {
             await loadTrip()
+            allPlaces = (try? await placeRepository.fetchAllPlaces()) ?? []
         }
     }
 
@@ -76,6 +81,26 @@ struct ActivityFormView: View {
                     "Location",
                     text: $model.locationName
                 )
+                .onChange(of: model.locationName) {
+                    model.locationTextChanged()
+                }
+
+                if !model.hasLocation {
+                    ForEach(suggestions(for: model.locationName)) { place in
+                        Button {
+                            model.apply(place)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(place.name)
+                                Text("\(place.suburb) · \(place.setting.title)")
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        }
+                        .foregroundStyle(.primary)
+                    }
+                }
             }
 
             Section("Date and time") {
@@ -100,23 +125,11 @@ struct ActivityFormView: View {
 
             Section("Location coordinates") {
                 LabeledContent("Latitude") {
-                    TextField(
-                        "Latitude",
-                        value: $model.latitude,
-                        format: .number
-                    )
-                    .keyboardType(.numbersAndPunctuation)
-                    .multilineTextAlignment(.trailing)
+                    Text(model.hasLocation ? model.latitude.formatted(.number.precision(.fractionLength(5))) : "–")
                 }
 
                 LabeledContent("Longitude") {
-                    TextField(
-                        "Longitude",
-                        value: $model.longitude,
-                        format: .number
-                    )
-                    .keyboardType(.numbersAndPunctuation)
-                    .multilineTextAlignment(.trailing)
+                    Text(model.hasLocation ? model.longitude.formatted(.number.precision(.fractionLength(5))) : "–")
                 }
             }
 
@@ -180,12 +193,25 @@ struct ActivityFormView: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(model.isSaving)
+                .disabled(model.isSaving || !model.hasLocation)
             }
         }
         .scrollContentBackground(.hidden)
         .tint(AppColors.primary)
         .scrollDismissesKeyboard(.interactively)
+    }
+
+    /// Up to 5 bundled places whose name or suburb contains what the user typed.
+    private func suggestions(for text: String) -> [Place] {
+        let query = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return [] }
+        return Array(
+            allPlaces.filter {
+                $0.name.localizedCaseInsensitiveContains(query)
+                    || $0.suburb.localizedCaseInsensitiveContains(query)
+            }
+            .prefix(5)
+        )
     }
 
     private func saveActivity(

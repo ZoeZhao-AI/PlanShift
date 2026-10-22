@@ -25,6 +25,10 @@ final class ActivityFormViewModel {
     var setting: ActivitySetting = .indoor
     var estimatedCost = 0.0
 
+    /// Name of the place the coordinates came from. Typing a different name clears them,
+    /// so a typed name can never keep another place's coordinates.
+    private var pickedLocationName: String?
+
     var isSaving = false
     var errorMessage: String?
 
@@ -32,6 +36,28 @@ final class ActivityFormViewModel {
     private let existingActivity: ItineraryActivity?
     private let addUseCase: AddActivityUseCase
     private let updateUseCase: UpdateActivityUseCase
+
+    /// A location is set once the user picks a place (or the activity being edited already had one).
+    var hasLocation: Bool {
+        !locationName.isEmpty && !(latitude == 0 && longitude == 0)
+    }
+
+    /// Fills the location, coordinates, setting and cost from a place of the bundled dataset.
+    func apply(_ place: Place) {
+        pickedLocationName = place.name
+        locationName = place.name
+        latitude = place.latitude
+        longitude = place.longitude
+        setting = place.setting
+        estimatedCost = NSDecimalNumber(decimal: place.cost).doubleValue
+    }
+
+    /// Call when the location text changes; drops the coordinates if it no longer matches the picked place.
+    func locationTextChanged() {
+        guard locationName != pickedLocationName else { return }
+        latitude = 0
+        longitude = 0
+    }
 
     var isEditing: Bool {
         existingActivity != nil
@@ -59,6 +85,7 @@ final class ActivityFormViewModel {
             startTime = activity.startTime
             endTime = activity.endTime
             locationName = activity.locationName
+            pickedLocationName = activity.locationName
             latitude = activity.latitude
             longitude = activity.longitude
             setting = activity.setting
@@ -70,6 +97,11 @@ final class ActivityFormViewModel {
 
     func save() async -> Bool {
         guard !isSaving else {
+            return false
+        }
+
+        guard hasLocation else {
+            errorMessage = "Choose a place from the suggestions."
             return false
         }
 
