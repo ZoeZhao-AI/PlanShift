@@ -10,6 +10,8 @@ import SwiftUI
 struct UpdatedItineraryBannerContent: View {
     let viewModel: ReplaceViewModel
     let onUndone: () -> Void
+    /// Shows a close (x) button when set.
+    var onClose: (() -> Void)?
 
     var body: some View {
         if let original = viewModel.originalActivity,
@@ -22,6 +24,7 @@ struct UpdatedItineraryBannerContent: View {
                         replacementName: replacementName
                     )
                     undoButton
+                    closeButton
                 }
 
                 VStack(alignment: .leading, spacing: 12) {
@@ -33,8 +36,11 @@ struct UpdatedItineraryBannerContent: View {
                         )
                     }
 
-                    undoButton
-                        .frame(maxWidth: .infinity, alignment: .trailing)
+                    HStack(spacing: 8) {
+                        undoButton
+                        closeButton
+                    }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
             .padding(16)
@@ -118,5 +124,21 @@ struct UpdatedItineraryBannerContent: View {
         .buttonStyle(.plain)
         .disabled(viewModel.isProcessing)
         .accessibilityLabel("Undo activity replacement")
+    }
+
+    @ViewBuilder
+    private var closeButton: some View {
+        if let onClose {
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppColors.backgroundBottom)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(viewModel.isProcessing)
+            .accessibilityLabel("Dismiss")
+        }
     }
 }

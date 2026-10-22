@@ -89,6 +89,7 @@ struct ItineraryView: View {
         .safeAreaInset(edge: .bottom) {
             if router.showsUpdatedItineraryBanner {
                 UpdatedItineraryBanner()
+                    .transition(.opacity)
             }
         }
     }
