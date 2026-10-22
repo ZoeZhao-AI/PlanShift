@@ -17,7 +17,8 @@ enum AppColors {
     )
 
     // Brand
-    static let primary = Color(light: 0x0E9F8E, dark: 0x2CC4B0)
+    // Light value darkened from 0x0E9F8E (~3:1) so teal text/icons on the pale page reach WCAG AA (>= 4.5:1).
+    static let primary = Color(light: 0x087568, dark: 0x2CC4B0)
     static let coral = Color(light: 0xFF7A59, dark: 0xFF8A6D)
 
     // Text

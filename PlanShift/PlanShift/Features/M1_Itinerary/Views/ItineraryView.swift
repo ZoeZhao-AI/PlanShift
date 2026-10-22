@@ -10,14 +10,6 @@ struct ItineraryView: View {
     @State private var viewModel: ItineraryViewModel
     @State private var selectedDay = 0
 
-    private let primaryGreen = Color(
-        red: 0.02, green: 0.49, blue: 0.43
-    )
-
-    private let darkText = Color(
-        red: 0.08, green: 0.14, blue: 0.25
-    )
-
     init(
         tripRepository: any TripRepository =
             M1InMemoryTripRepository.shared,
@@ -45,19 +37,20 @@ struct ItineraryView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .foregroundStyle(darkText)
-        .background(
-            LinearGradient(
-                colors: [
-                    Color(red: 0.91, green: 0.96, blue: 1.0),
-                    Color(red: 0.89, green: 0.98, blue: 0.94)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-        )
-        .toolbar(.hidden, for: .navigationBar)
+        .m1ScreenBackground()
+        .navigationTitle(viewModel.trip?.name ?? "Itinerary")
+        .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            if viewModel.trip != nil {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        router.itineraryPath.append(.activityForm)
+                    } label: {
+                        Label("Add activity", systemImage: "plus")
+                    }
+                }
+            }
+        }
         .task {
             await viewModel.loadItinerary()
         }
@@ -68,6 +61,12 @@ struct ItineraryView: View {
                 Task {
                     await viewModel.loadItinerary()
                 }
+            }
+        }
+        // Replace (banner on) and Undo (banner off) both change the stored itinerary behind this screen.
+        .onChange(of: router.showsUpdatedItineraryBanner) {
+            Task {
+                await viewModel.loadItinerary()
             }
         }
         .alert(
@@ -97,328 +96,181 @@ struct ItineraryView: View {
     // MARK: - Empty State
 
     private var noTripContent: some View {
-        VStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Itinerary")
-                    .font(.system(size: 27, weight: .bold))
-
-                Text("No trip yet")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+        ContentUnavailableView {
+            Label("No trip yet", systemImage: "suitcase")
+        } description: {
+            Text("Create a trip, then add the places you plan to visit each day.")
+        } actions: {
+            Button {
+                router.itineraryPath.append(.createTrip)
+            } label: {
+                Label("Create your first trip", systemImage: "plus")
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 20)
-            .padding(.top, 20)
-
-            Spacer()
-
-            VStack(spacing: 12) {
-                Image(systemName: "cloud.sun.fill")
-                    .font(.system(size: 56))
-                    .foregroundStyle(primaryGreen)
-
-                Text("No activities yet")
-                    .font(.headline)
-
-                Text(
-                    "Start by creating your trip, then add the places you plan to visit each day."
-                )
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 30)
-
-                Button {
-                    router.itineraryPath.append(.createTrip)
-                } label: {
-                    Label(
-                        "Create your first trip",
-                        systemImage: "plus"
-                    )
-                    .font(.subheadline.bold())
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 12)
-                    .background(
-                        primaryGreen,
-                        in: RoundedRectangle(cornerRadius: 10)
-                    )
-                }
-                .buttonStyle(.plain)
-            }
-
-            Spacer()
-            Spacer()
+            .buttonStyle(.borderedProminent)
+            .tint(AppColors.ctaFill)
+            .tint(AppColors.ctaFill)
+            .controlSize(.large)
         }
     }
 
     // MARK: - Itinerary Home
 
     private func tripContent(_ trip: Trip) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
+        let calendar = Calendar.current
+        let currentDate = calendar.date(
+            byAdding: .day,
+            value: selectedDay,
+            to: calendar.startOfDay(for: trip.startDate)
+        ) ?? trip.startDate
+        let dayActivities = viewModel.activities
+            .filter { calendar.isDate($0.date, inSameDayAs: currentDate) }
+            .sorted { $0.startTime < $1.startTime }
 
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(trip.name)
-                            .font(.system(size: 27, weight: .bold))
-
-                        HStack(spacing: 5) {
-                            Text(
-                                trip.startDate.formatted(
-                                    .dateTime.weekday(.abbreviated)
-                                        .day().month(.abbreviated)
-                                )
-                            )
-
-                            Text("–")
-
-                            Text(
-                                trip.endDate.formatted(
-                                    .dateTime.weekday(.abbreviated)
-                                        .day().month(.abbreviated)
-                                )
-                            )
-
-                            Text("· Day \(selectedDay + 1)")
-                        }
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    }
-
-                    Spacer()
-
-                    Button {
-                        router.itineraryPath.append(.activityForm)
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.headline)
-                            .foregroundStyle(primaryGreen)
-                            .frame(width: 36, height: 36)
-                            .background(.white, in: Circle())
-                    }
-                }
+        return ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text(
+                    "\(trip.startDate.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))) – "
+                    + "\(trip.endDate.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)))"
+                )
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
 
                 daySelector(trip)
 
-                let currentDate = Calendar.current.date(
-                    byAdding: .day,
-                    value: selectedDay,
-                    to: Calendar.current.startOfDay(
-                        for: trip.startDate
-                    )
-                ) ?? trip.startDate
-
-                let dayActivities = viewModel.activities
-                    .filter {
-                        Calendar.current.isDate(
-                            $0.date,
-                            inSameDayAs: currentDate
-                        )
-                    }
-                    .sorted {
-                        $0.startTime < $1.startTime
-                    }
-
                 if dayActivities.isEmpty {
-                    VStack(spacing: 12) {
-                        Image(systemName: "calendar.badge.plus")
-                            .font(.system(size: 42))
-                            .foregroundStyle(primaryGreen)
-
-                        Text("No activities for this day")
-                            .font(.headline)
-
-                        Button("Add Activity") {
+                    ContentUnavailableView {
+                        Label("No activities for this day", systemImage: "calendar.badge.plus")
+                    } actions: {
+                        Button("Add activity") {
                             router.itineraryPath.append(.activityForm)
                         }
-                        .font(.subheadline.bold())
-                        .foregroundStyle(primaryGreen)
+                        .buttonStyle(.bordered)
+                        .controlSize(.large)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 55)
+                    .padding(.top, 24)
                 } else {
-                    LazyVStack(spacing: 9) {
+                    LazyVStack(spacing: 12) {
                         ForEach(dayActivities) { activity in
                             activityCard(activity)
                         }
                     }
                 }
             }
-            .padding(16)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 16)
         }
     }
 
     // MARK: - Day Selector
 
     private func daySelector(_ trip: Trip) -> some View {
+        let calendar = Calendar.current
         let totalDays = max(
             1,
-            (Calendar.current.dateComponents(
+            (calendar.dateComponents(
                 [.day],
-                from: Calendar.current.startOfDay(
-                    for: trip.startDate
-                ),
-                to: Calendar.current.startOfDay(
-                    for: trip.endDate
-                )
+                from: calendar.startOfDay(for: trip.startDate),
+                to: calendar.startOfDay(for: trip.endDate)
             ).day ?? 0) + 1
         )
 
         return ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 4) {
+            HStack(spacing: 8) {
                 ForEach(0..<totalDays, id: \.self) { day in
+                    let date = calendar.date(byAdding: .day, value: day, to: trip.startDate) ?? trip.startDate
+                    let isSelected = selectedDay == day
                     Button {
                         selectedDay = day
                     } label: {
-                        VStack(spacing: 3) {
+                        VStack(spacing: 2) {
                             Text("Day \(day + 1)")
-                                .font(.caption.bold())
-
-                            let date = Calendar.current.date(
-                                byAdding: .day,
-                                value: day,
-                                to: trip.startDate
-                            ) ?? trip.startDate
-
-                            Text(
-                                Calendar.current.isDateInToday(date)
-                                    ? "Today"
-                                    : date.formatted(
-                                        .dateTime.weekday(.abbreviated)
-                                    )
-                            )
-                            .font(.caption2)
+                                .font(.subheadline.weight(.semibold))
+                            Text(calendar.isDateInToday(date) ? "Today" : date.formatted(.dateTime.weekday(.abbreviated)))
+                                .font(.caption)
                         }
-                        .frame(width: 98)
-                        .padding(.vertical, 8)
-                        .foregroundStyle(
-                            selectedDay == day ? .white : darkText
-                        )
+                        .padding(.horizontal, 16)
+                        .frame(minWidth: 80, minHeight: 44)
+                        .padding(.vertical, 4)
+                        .foregroundStyle(isSelected ? Color.white : Color.primary)
                         .background(
-                            selectedDay == day
-                                ? primaryGreen
-                                : Color.white,
-                            in: RoundedRectangle(cornerRadius: 9)
+                            isSelected ? AppColors.ctaFill : Color(.secondarySystemGroupedBackground),
+                            in: Capsule()
                         )
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Day \(day + 1), \(date.formatted(.dateTime.weekday(.wide).day().month(.wide)))")
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
                 }
             }
-            .padding(4)
         }
-        .background(
-            .white.opacity(0.65),
-            in: RoundedRectangle(cornerRadius: 12)
-        )
     }
 
     // MARK: - Activity Card
 
-    private func activityCard(
-        _ activity: ItineraryActivity
-    ) -> some View {
-
+    private func activityCard(_ activity: ItineraryActivity) -> some View {
         let isFinished = activity.endTime < Date()
+        let timeRange = "\(activity.startTime.formatted(date: .omitted, time: .shortened)) – "
+            + "\(activity.endTime.formatted(date: .omitted, time: .shortened))"
 
         return Button {
-            router.itineraryPath.append(
-                .activityDetail(activityId: activity.id)
-            )
+            router.itineraryPath.append(.activityDetail(activityId: activity.id))
         } label: {
             VStack(alignment: .leading, spacing: 0) {
+                ActivityPhotoView(activity: activity)
+                    .frame(height: 140)
+                    .frame(maxWidth: .infinity)
+                    .overlay(alignment: .topLeading) {
+                        Text(timeRange)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.primary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(.regularMaterial, in: Capsule())
+                            .padding(10)
+                    }
+                    .clipped()
 
-                ZStack(alignment: .topLeading) {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color(red: 0.72, green: 0.88, blue: 0.98),
-                                    Color(red: 0.48, green: 0.79, blue: 0.72)
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-
-                    Image(systemName: "mountain.2.fill")
-                        .font(.system(size: 40))
-                        .foregroundStyle(
-                            primaryGreen.opacity(0.45)
-                        )
-                        .frame(
-                            maxWidth: .infinity,
-                            maxHeight: .infinity
-                        )
-
-                    Text(
-                        activity.startTime.formatted(
-                            date: .omitted,
-                            time: .shortened
-                        )
-                        + " – " +
-                        activity.endTime.formatted(
-                            date: .omitted,
-                            time: .shortened
-                        )
-                    )
-                    .font(.caption2.bold())
-                    .foregroundStyle(darkText)
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 5)
-                    .background(.white.opacity(0.9), in: Capsule())
-                    .padding(8)
-                }
-                .frame(height: 100)
-
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(alignment: .firstTextBaseline) {
                         Text(activity.name)
-                            .font(.subheadline.bold())
-                            .foregroundStyle(darkText)
+                            .font(.headline)
+                            .foregroundStyle(.primary)
+                            .multilineTextAlignment(.leading)
 
-                        Spacer()
+                        Spacer(minLength: 8)
 
                         Text(isFinished ? "Done" : "Up next")
-                            .font(.caption2.bold())
-                            .foregroundStyle(
-                                isFinished ? .gray : primaryGreen
-                            )
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(
-                                isFinished
-                                    ? Color.gray.opacity(0.12)
-                                    : primaryGreen.opacity(0.1),
-                                in: Capsule()
-                            )
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(isFinished ? Color.secondary : AppColors.actionText)
                     }
 
-                    HStack(spacing: 6) {
-                        Text(activity.setting.title)
-                            .font(.caption2.bold())
-                            .foregroundStyle(primaryGreen)
+                    HStack(spacing: 8) {
+                        SettingPill(setting: activity.setting)
 
                         Text(activity.locationName)
-                            .font(.caption2)
+                            .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
 
-                        Spacer()
+                        Spacer(minLength: 0)
 
                         Image(systemName: "chevron.right")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(.tertiary)
+                            .accessibilityHidden(true)
                     }
                 }
-                .padding(10)
+                .padding(14)
             }
-            .background(
-                .white,
-                in: RoundedRectangle(cornerRadius: 14)
-            )
+            .m1Card()
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .buttonStyle(.plain)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(activity.name), \(timeRange), \(activity.setting.title), \(activity.locationName), \(isFinished ? "done" : "up next")")
+        .accessibilityHint("Opens activity details")
+        .accessibilityAddTraits(.isButton)
     }
 }
 
