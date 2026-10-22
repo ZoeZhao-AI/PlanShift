@@ -58,8 +58,8 @@ final class UseBackupViewModelTests: XCTestCase {
     private lazy var zoo = makeActivity("Taronga Zoo", day: 14, hour: 13)
     private lazy var beach = makeActivity("Manly Beach", day: 15, hour: 10)
 
-    private func makeViewModel(backup: BackupOption) -> UseBackupViewModel {
-        let repository = MockActivityRepository(activities: [zoo, beach, walk])
+    private func makeViewModel(backup: BackupOption, activities: [ItineraryActivity]? = nil) -> UseBackupViewModel {
+        let repository = MockActivityRepository(activities: activities ?? [zoo, beach, walk])
         return UseBackupViewModel(
             backup: backup,
             fetchDayActivities: FetchDayActivitiesUseCase(repository: repository, calendar: calendar),
@@ -141,16 +141,50 @@ final class UseBackupViewModelTests: XCTestCase {
         XCTAssertFalse(viewModel.canContinue)
     }
 
-    func testOriginalPlanBackupCannotContinue() async {
+    func testOriginalPlanBackupCanContinueWithItsDetails() async throws {
         let backup = BackupOption(tripId: trip.id, content: .activity(zoo), dayDate: date(day: 14))
         let viewModel = makeViewModel(backup: backup)
         await viewModel.load(trip: trip)
 
         viewModel.selectActivity(id: walk.id)
 
-        XCTAssertNil(viewModel.place)
-        XCTAssertNotNil(viewModel.unsupportedMessage)
-        XCTAssertFalse(viewModel.canContinue)
+        let place = try XCTUnwrap(viewModel.place)
+        XCTAssertEqual(viewModel.originalPlan, zoo)
+        XCTAssertEqual(place.name, zoo.name)
+        XCTAssertEqual(place.suburb, zoo.locationName)
+        XCTAssertEqual(place.durationMinutes, 180)
+        XCTAssertTrue(viewModel.canContinue)
         XCTAssertTrue(viewModel.backupRow.isFromReplacedActivity)
+    }
+
+    func testOriginalPlanPreselectsTheActivityThatReplacedIt() async {
+        var replacement = zoo
+        replacement.name = "Australian Museum"
+        replacement.locationName = "Australian Museum"
+        let backup = BackupOption(tripId: trip.id, content: .activity(zoo), dayDate: date(day: 14))
+        let viewModel = makeViewModel(backup: backup, activities: [replacement, beach, walk])
+
+        await viewModel.load(trip: trip)
+
+        XCTAssertEqual(viewModel.selectedDay, date(day: 14))
+        XCTAssertEqual(viewModel.selectedActivity, replacement)
+        XCTAssertTrue(viewModel.canContinue)
+    }
+
+    func testOriginalPlanBackInTheItineraryIsNotPreselected() async {
+        // After Undo the stored activity equals the original plan again.
+        let backup = BackupOption(tripId: trip.id, content: .activity(zoo), dayDate: date(day: 14))
+        let viewModel = makeViewModel(backup: backup)
+
+        await viewModel.load(trip: trip)
+
+        XCTAssertNil(viewModel.selectedActivityId)
+        XCTAssertFalse(viewModel.canContinue)
+    }
+
+    func testPlaceBackupHasNoOriginalPlan() {
+        let viewModel = makeViewModel(backup: makePlaceBackup(day: 14))
+
+        XCTAssertNil(viewModel.originalPlan)
     }
 }

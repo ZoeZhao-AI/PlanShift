@@ -12,6 +12,8 @@ struct ReplaceConfirmationContent: View {
     let original: ItineraryActivity
     let alternative: Place
     let viewModel: ReplaceViewModel
+    /// Set when the alternative is an "Original plan" backup.
+    var restoring: ItineraryActivity?
     let onCancel: () -> Void
     let onConfirmed: () -> Void
 
@@ -275,7 +277,8 @@ struct ReplaceConfirmationContent: View {
                 Task {
                     let succeeded = await viewModel.confirm(
                         activity: original,
-                        alternative: alternative
+                        alternative: alternative,
+                        restoring: restoring
                     )
 
                     if succeeded {

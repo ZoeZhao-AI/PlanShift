@@ -23,10 +23,6 @@ struct UseBackupView: View {
             VStack(alignment: .leading, spacing: 20) {
                 BackupRowCard(row: viewModel.backupRow, badge: "Backup", showsChevron: false)
 
-                if let message = viewModel.unsupportedMessage {
-                    NoticeCard(systemImage: "info.circle", text: message)
-                }
-
                 Text("Replace which activity?")
                     .font(.headline)
                     .foregroundStyle(AppColors.textPrimary)
@@ -87,7 +83,9 @@ struct UseBackupView: View {
     private var continueButton: some View {
         Button {
             guard let original = viewModel.selectedActivity, let place = viewModel.place else { return }
-            router.present(.replaceConfirmation(original: original, alternative: place))
+            router.present(
+                .replaceConfirmation(original: original, alternative: place, restoring: viewModel.originalPlan)
+            )
         } label: {
             Text("Continue")
                 .font(.headline)
