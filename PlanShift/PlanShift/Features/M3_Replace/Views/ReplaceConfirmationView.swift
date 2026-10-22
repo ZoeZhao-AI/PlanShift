@@ -5,6 +5,8 @@ import SwiftUI
 struct ReplaceConfirmationView: View {
     let original: ItineraryActivity
     let alternative: Place
+    /// Set when the alternative is an "Original plan" backup.
+    var restoring: ItineraryActivity?
 
     @Environment(AppRouter.self) private var router
     @Environment(ReplaceViewModel.self) private var viewModel
@@ -14,6 +16,7 @@ struct ReplaceConfirmationView: View {
             original: original,
             alternative: alternative,
             viewModel: viewModel,
+            restoring: restoring,
             onCancel: {
                 router.dismissSheet()
             },

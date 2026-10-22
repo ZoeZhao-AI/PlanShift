@@ -57,15 +57,34 @@ final class UseBackupViewModel {
         self.calendar = calendar
     }
 
-    /// The place to swap in. Nil for an "Original plan" backup, which M3 cannot accept yet.
+    /// The place to swap in. For an "Original plan" backup, the original activity shown as a place
+    /// (its location name as the suburb line, its planned length as the duration).
     var place: Place? {
-        guard case .place(let place) = backup.content else { return nil }
-        return place
+        switch backup.content {
+        case .place(let place):
+            return place
+        case .activity(let activity):
+            return Place(
+                id: activity.id,
+                name: activity.name,
+                suburb: activity.locationName,
+                setting: activity.setting,
+                cost: activity.estimatedCost,
+                durationMinutes: Int(activity.endTime.timeIntervalSince(activity.startTime) / 60),
+                latitude: activity.latitude,
+                longitude: activity.longitude,
+                openingHour: 0,
+                closingHour: 24,
+                imageName: M2Formatting.imageSlug(for: activity.locationName),
+                suitableDisruptions: []
+            )
+        }
     }
 
-    /// Explains why an "Original plan" backup cannot continue. Nil for place backups.
-    var unsupportedMessage: String? {
-        place == nil ? "Restoring an original plan isn't available yet." : nil
+    /// The original activity to restore. Nil for place backups.
+    var originalPlan: ItineraryActivity? {
+        guard case .activity(let activity) = backup.content else { return nil }
+        return activity
     }
 
     /// True when the selected day finished loading and has nothing to replace.
@@ -82,6 +101,7 @@ final class UseBackupViewModel {
     }
 
     /// Builds the trip's days and opens the backup's own day (or Day 1 if it is outside the trip).
+    /// For an "Original plan", also preselects the activity that replaced it, if it is still there.
     func load(trip: Trip) async {
         tripId = trip.id
         days = makeDays(for: trip)
@@ -90,6 +110,13 @@ final class UseBackupViewModel {
         let firstDay = days.contains { $0.date == backupDay } ? backupDay : days.first?.date
         guard let firstDay else { return }
         await selectDay(firstDay)
+
+        // A replace keeps the activity's id, so the replacement has the original's id but other details.
+        if let originalPlan,
+           let replacement = activities.first(where: { $0.id == originalPlan.id }),
+           replacement != originalPlan {
+            selectActivity(id: replacement.id)
+        }
     }
 
     /// Switches day, clears the selection and loads that day's activities.

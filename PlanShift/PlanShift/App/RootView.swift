@@ -89,8 +89,8 @@ struct RootView: View {
                 switch route {
                 case .disruptionFlow(let activity):
                     RecommendationFlowView(activity: activity, backups: saveBackup, trips: tripRepository)
-                case .replaceConfirmation(let original, let alternative):
-                    ReplaceConfirmationView(original: original, alternative: alternative)
+                case .replaceConfirmation(let original, let alternative, let restoring):
+                    ReplaceConfirmationView(original: original, alternative: alternative, restoring: restoring)
                 case .useBackup(let backup):
                     CurrentTripView(trips: tripRepository, reloadOn: backup.id) { trip in
                         UseBackupView(

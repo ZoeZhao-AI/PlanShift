@@ -36,7 +36,8 @@ final class ReplaceViewModel {
 
     func confirm(
         activity: ItineraryActivity,
-        alternative: Place
+        alternative: Place,
+        restoring originalPlan: ItineraryActivity? = nil
     ) async -> Bool {
         guard !isProcessing, !canUndo else {
             return false
@@ -47,10 +48,17 @@ final class ReplaceViewModel {
         defer { isProcessing = false }
 
         do {
-            let original = try await replaceActivity.execute(
-                activity: activity,
-                with: alternative
-            )
+            let original = if let originalPlan {
+                try await replaceActivity.execute(
+                    activity: activity,
+                    restoring: originalPlan
+                )
+            } else {
+                try await replaceActivity.execute(
+                    activity: activity,
+                    with: alternative
+                )
+            }
 
             originalActivity = original
             replacementName = alternative.name

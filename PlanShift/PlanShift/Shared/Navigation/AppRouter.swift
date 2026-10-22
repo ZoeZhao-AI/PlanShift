@@ -13,13 +13,14 @@ enum AppTab: Hashable {
 /// Screens shown as a sheet on top of the tabs.
 enum SheetRoute: Identifiable, Hashable {
     case disruptionFlow(activity: ItineraryActivity)                        // M2-01 → M2-04
-    case replaceConfirmation(original: ItineraryActivity, alternative: Place) // M3-01
+    /// `restoring` is set when the alternative is an "Original plan" backup.
+    case replaceConfirmation(original: ItineraryActivity, alternative: Place, restoring: ItineraryActivity? = nil) // M3-01
     case useBackup(backup: BackupOption)                                    // M4-02
 
     var id: String {
         switch self {
         case .disruptionFlow(let activity): "disruption-\(activity.id)"
-        case .replaceConfirmation(let original, let alternative): "replace-\(original.id)-\(alternative.id)"
+        case .replaceConfirmation(let original, let alternative, _): "replace-\(original.id)-\(alternative.id)"
         case .useBackup(let backup): "useBackup-\(backup.id)"
         }
     }

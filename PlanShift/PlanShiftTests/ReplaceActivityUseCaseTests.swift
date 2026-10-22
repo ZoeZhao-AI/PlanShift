@@ -237,6 +237,90 @@ final class ReplaceActivityUseCaseTests: XCTestCase {
         XCTAssertEqual(result, [previous, expected, next])
     }
 
+    func testRestoreOriginalPlanKeepsItsNameLocationAndLength() async throws {
+        let replacement = makeActivity()
+        let originalPlan = ItineraryActivity(
+            id: replacement.id,
+            tripId: replacement.tripId,
+            name: "Botanic Garden stroll",
+            date: replacement.date,
+            startTime: replacement.startTime,
+            endTime: replacement.startTime.addingTimeInterval(5_400),
+            locationName: "Royal Botanic Garden Sydney",
+            latitude: -33.8628,
+            longitude: 151.2157,
+            setting: .outdoor,
+            estimatedCost: 0
+        )
+
+        let repository = MockActivityRepository(
+            activities: [replacement]
+        )
+        let backups = MockBackupRepository()
+        let useCase = ReplaceActivityUseCase(
+            activityRepository: repository,
+            backupRepository: backups
+        )
+
+        let result = try await useCase.execute(
+            activity: replacement,
+            restoring: originalPlan
+        )
+
+        let activities = try await repository.fetchActivities(
+            tripId: replacement.tripId
+        )
+        let updated = try XCTUnwrap(activities.first)
+        XCTAssertEqual(result, replacement)
+        XCTAssertEqual(updated.id, replacement.id)
+        XCTAssertEqual(updated.name, "Botanic Garden stroll")
+        XCTAssertEqual(updated.locationName, "Royal Botanic Garden Sydney")
+        XCTAssertEqual(updated.startTime, replacement.startTime)
+        XCTAssertEqual(updated.endTime, replacement.startTime.addingTimeInterval(5_400))
+        XCTAssertEqual(updated.estimatedCost, 0)
+
+        let saved = try await backups.fetchBackups(tripId: replacement.tripId)
+        XCTAssertEqual(saved.map(\.content), [.activity(replacement)])
+    }
+
+    func testRestoreOriginalPlanRejectsTimeConflictAndPreservesData() async throws {
+        let replacement = makeActivity()
+        var next = makeActivity()
+        next.tripId = replacement.tripId
+        next.startTime = replacement.endTime
+        next.endTime = next.startTime.addingTimeInterval(3_600)
+
+        var originalPlan = makeActivity()
+        originalPlan.tripId = replacement.tripId
+        originalPlan.endTime = originalPlan.startTime.addingTimeInterval(10_800)
+
+        let repository = MockActivityRepository(
+            activities: [replacement, next]
+        )
+        let backups = MockBackupRepository()
+        let useCase = ReplaceActivityUseCase(
+            activityRepository: repository,
+            backupRepository: backups
+        )
+
+        do {
+            _ = try await useCase.execute(
+                activity: replacement,
+                restoring: originalPlan
+            )
+            XCTFail("Expected timeConflict.")
+        } catch {
+            XCTAssertEqual(error as? DomainError, .timeConflict)
+        }
+
+        let result = try await repository.fetchActivities(
+            tripId: replacement.tripId
+        )
+        XCTAssertEqual(result, [replacement, next])
+        let saved = try await backups.fetchBackups(tripId: replacement.tripId)
+        XCTAssertTrue(saved.isEmpty)
+    }
+
     private func makeActivity() -> ItineraryActivity {
         let startTime = Date(
             timeIntervalSince1970: 1_800_000_000

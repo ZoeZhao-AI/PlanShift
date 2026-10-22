@@ -23,6 +23,54 @@ nonisolated struct ReplaceActivityUseCase: Sendable {
         activity: ItineraryActivity,
         with place: Place
     ) async throws -> ItineraryActivity {
+        try await replace(
+            activity,
+            with: Details(
+                name: place.name,
+                locationName: place.name,
+                latitude: place.latitude,
+                longitude: place.longitude,
+                setting: place.setting,
+                cost: place.cost,
+                durationMinutes: place.durationMinutes
+            )
+        )
+    }
+
+    /// Restores an "Original plan" backup: like a place, but keeps its own name and location name.
+    func execute(
+        activity: ItineraryActivity,
+        restoring originalPlan: ItineraryActivity
+    ) async throws -> ItineraryActivity {
+        try await replace(
+            activity,
+            with: Details(
+                name: originalPlan.name,
+                locationName: originalPlan.locationName,
+                latitude: originalPlan.latitude,
+                longitude: originalPlan.longitude,
+                setting: originalPlan.setting,
+                cost: originalPlan.estimatedCost,
+                durationMinutes: Int(originalPlan.endTime.timeIntervalSince(originalPlan.startTime) / 60)
+            )
+        )
+    }
+
+    /// What the replaced activity becomes. It keeps its id, date and start time.
+    private struct Details {
+        let name: String
+        let locationName: String
+        let latitude: Double
+        let longitude: Double
+        let setting: ActivitySetting
+        let cost: Decimal
+        let durationMinutes: Int
+    }
+
+    private func replace(
+        _ activity: ItineraryActivity,
+        with place: Details
+    ) async throws -> ItineraryActivity {
         let activities = try await activityRepository.fetchActivities(
             tripId: activity.tripId
         )
@@ -53,7 +101,7 @@ nonisolated struct ReplaceActivityUseCase: Sendable {
 
         var replacement = original
         replacement.name = place.name
-        replacement.locationName = place.name
+        replacement.locationName = place.locationName
         replacement.latitude = place.latitude
         replacement.longitude = place.longitude
         replacement.setting = place.setting
