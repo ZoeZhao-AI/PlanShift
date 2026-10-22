@@ -5,6 +5,7 @@ import SwiftUI
 /// The app's root: one tab per area, and sheets driven by `AppRouter.activeSheet`.
 struct RootView: View {
     @Environment(AppRouter.self) private var router
+    @Environment(\.scenePhase) private var scenePhase
     @State private var replaceViewModel: ReplaceViewModel
     @State private var backupsListViewModel: BackupsListViewModel
 
@@ -103,6 +104,11 @@ struct RootView: View {
         }
         .onOpenURL { url in
             router.handle(url: url)
+        }
+        .onChange(of: scenePhase) {
+            if scenePhase == .background {
+                WidgetTimelineReloader().requestReload()
+            }
         }
         .environment(replaceViewModel)
     }

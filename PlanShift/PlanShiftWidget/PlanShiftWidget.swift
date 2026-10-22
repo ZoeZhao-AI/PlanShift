@@ -11,14 +11,30 @@ struct NextActivityProvider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (Entry) -> Void) {
-        completion(Entry(date: .now, state: .unavailable))
+        load { timeline in
+            completion(timeline.entries[0])
+        }
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> Void) {
-        // M1's persistent activity repository and current-trip selection are not wired yet.
-        // Keep this distinct from a successfully loaded itinerary with no upcoming activities.
-        let timeline = WidgetActivityTimeline.unavailable(now: .now)
-        completion(Timeline(entries: timeline.entries, policy: .after(timeline.reloadAfter)))
+        load { timeline in
+            completion(Timeline(entries: timeline.entries, policy: .after(timeline.reloadAfter)))
+        }
+    }
+
+    private func load(completion: @escaping (WidgetActivityTimeline) -> Void) {
+        Task { @MainActor in
+            do {
+                let persistence = try PersistenceController()
+                let loader = GetWidgetTimeline(
+                    trips: CoreDataTripRepository(container: persistence.container),
+                    activities: CoreDataActivityRepository(container: persistence.container)
+                )
+                completion(try await loader.execute())
+            } catch {
+                completion(.unavailable(now: .now))
+            }
+        }
     }
 }
 

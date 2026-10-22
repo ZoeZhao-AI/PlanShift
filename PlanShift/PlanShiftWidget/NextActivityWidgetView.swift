@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import WidgetKit
 
 struct NextActivityWidgetView: View {
@@ -59,6 +60,46 @@ struct NextActivityWidgetView: View {
                 }
                 compactActivity(activity)
             }
+        } else if !dynamicTypeSize.isAccessibilitySize, let photo = activityPhoto(activity) {
+            if family == .systemMedium {
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        heading
+                        Text(activity.startTime, style: .time)
+                            .font(.title2.weight(.semibold))
+                            .lineLimit(1)
+                        activityName(activity)
+                        location(activity)
+                        activityDate(activity)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    Image(uiImage: photo)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 104, height: 112)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .accessibilityHidden(true)
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 6) {
+                    Image(uiImage: photo)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(height: 46)
+                        .clipped()
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .accessibilityHidden(true)
+                    HStack {
+                        heading
+                            .labelStyle(.iconOnly)
+                        Spacer(minLength: 4)
+                        Text(activity.startTime, style: .time)
+                            .font(.caption.weight(.semibold))
+                            .lineLimit(1)
+                    }
+                    activityName(activity)
+                }
+            }
         } else if family == .systemMedium && !dynamicTypeSize.isAccessibilitySize {
             HStack(alignment: .center, spacing: 16) {
                 VStack(alignment: .leading, spacing: 6) {
@@ -97,6 +138,18 @@ struct NextActivityWidgetView: View {
                 compactActivity(activity)
             }
         }
+    }
+
+    private func activityPhoto(_ activity: ItineraryActivity) -> UIImage? {
+        for name in [activity.locationName, activity.name] {
+            let assetName = name
+                .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: nil)
+                .components(separatedBy: CharacterSet.alphanumerics.inverted)
+                .filter { !$0.isEmpty }
+                .joined(separator: "-")
+            if let image = UIImage(named: assetName) { return image }
+        }
+        return nil
     }
 
     private var heading: some View {
