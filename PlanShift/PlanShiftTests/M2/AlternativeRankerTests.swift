@@ -73,14 +73,25 @@ final class AlternativeRankerTests: XCTestCase {
         XCTAssertEqual(try rank([near, mid, far], filters: filters).count, 3)
     }
 
-    func testDurationBucketsDoNotOverlap() {
+    func testDurationBucketBoundaries() {
         XCTAssertTrue(DurationOption.underOneHour.allows(minutes: 60))
         XCTAssertFalse(DurationOption.underOneHour.allows(minutes: 61))
+        XCTAssertFalse(DurationOption.oneToTwoHours.allows(minutes: 44))
+        XCTAssertTrue(DurationOption.oneToTwoHours.allows(minutes: 45))
         XCTAssertTrue(DurationOption.oneToTwoHours.allows(minutes: 61))
         XCTAssertTrue(DurationOption.oneToTwoHours.allows(minutes: 120))
         XCTAssertFalse(DurationOption.oneToTwoHours.allows(minutes: 121))
         XCTAssertTrue(DurationOption.halfDay.allows(minutes: 121))
         XCTAssertFalse(DurationOption.halfDay.allows(minutes: 120))
+    }
+
+    func testOneToTwoHoursOverlapsUnderOneHourFrom45To60() {
+        for minutes in [45, 50, 60] {
+            XCTAssertTrue(DurationOption.underOneHour.allows(minutes: minutes), "\(minutes)")
+            XCTAssertTrue(DurationOption.oneToTwoHours.allows(minutes: minutes), "\(minutes)")
+        }
+        XCTAssertTrue(DurationOption.underOneHour.allows(minutes: 44))
+        XCTAssertFalse(DurationOption.oneToTwoHours.allows(minutes: 44))
     }
 
     func testTransportDelayPrefersNearerPlace() throws {
@@ -102,20 +113,21 @@ final class AlternativeRankerTests: XCTestCase {
         XCTAssertTrue(result[0].reasons.contains(.quickVisit))
     }
 
-    func testReturnsAtMostThreeWithSequentialRanks() throws {
-        let places = (0..<8).map { F.place("Place \($0)", suburb: "Suburb \($0)", kmNorth: 0.2 + Double($0) * 0.1) }
+    func testReturnsAtMostEightWithSequentialRanks() throws {
+        let places = (0..<12).map { F.place("Place \($0)", suburb: "Suburb \($0)", kmNorth: 0.2 + Double($0) * 0.1) }
         let result = try rank(places)
-        XCTAssertEqual(result.count, 3)
-        XCTAssertEqual(result.map(\.rank), [1, 2, 3])
+        XCTAssertEqual(result.count, 8)
+        XCTAssertEqual(result.map(\.rank), Array(1...8))
         XCTAssertEqual(result.map(\.score), result.map(\.score).sorted(by: >), "scores must not increase down the list")
     }
 
     func testOrderIsDeterministicRegardlessOfInputOrder() throws {
         // Identical in every scored respect; only name/id differ.
-        let places = ["Delta", "Alpha", "Charlie", "Bravo"].map { F.place($0, suburb: $0) }
+        let names = ["Delta", "India", "Alpha", "Golf", "Charlie", "Juliet", "Echo", "Hotel", "Bravo", "Foxtrot"]
+        let places = names.map { F.place($0, suburb: $0) }
         let forward = try rank(places).map(\.place.name)
         let reversed = try rank(places.reversed()).map(\.place.name)
-        XCTAssertEqual(forward, ["Alpha", "Bravo", "Charlie"])
+        XCTAssertEqual(forward, ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel"])
         XCTAssertEqual(forward, reversed)
     }
 
