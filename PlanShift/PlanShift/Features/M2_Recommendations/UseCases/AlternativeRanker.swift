@@ -16,14 +16,14 @@ import Foundation
 /// 2. **Hard filters**: budget, setting, duration bucket, distance (only if an origin exists),
 ///    and places that are closed for the *entire* planned time slot.
 /// 3. Score survivors with six components, weighted per disruption.
-/// 4. Pick up to 3 greedily, penalising a suburb that is already represented.
+/// 4. Pick up to 8 greedily, penalising a suburb that is already represented (the screen shows 3 first).
 /// 5. Break ties by name, then id. Missing data is never treated as free/zero/open.
 ///
 /// Opening hours are checked against the activity's planned slot, not the wall clock, so the
 /// result does not depend on "now". Only the regular daily window is known (no per-weekday data).
 nonisolated struct AlternativeRanker: Sendable {
     var calendar: Calendar = .current
-    var maxResults = 3
+    var maxResults = 8
 
     /// - Throws: `DomainError.noMatchingAlternatives` when nothing survives the hard filters.
     func rank(

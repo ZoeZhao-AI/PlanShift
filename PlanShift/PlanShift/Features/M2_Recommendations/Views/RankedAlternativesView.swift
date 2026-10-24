@@ -19,7 +19,7 @@ enum AlternativesScreenState: Equatable {
     case failed(String)
 }
 
-/// M2-03. Up to three ranked places with reason tags.
+/// M2-03. The top three ranked places with reason tags, plus up to five more behind "See more options".
 ///
 /// UI only: the list, the saved bookmarks, the banner and the toast all arrive as parameters, and
 /// bookmark / retry / toast taps leave through closures. Replace just pushes M3's confirmation screen.
@@ -48,6 +48,11 @@ struct RankedAlternativesView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// Set when Replace is tapped; pushes M3's confirmation screen.
     @State private var replacementTarget: Place?
+    /// "See more options" was tapped. Collapses again whenever a new search starts.
+    @State private var showsMoreResults = false
+
+    /// How many results are shown before "See more options".
+    private static let initiallyShown = 3
 
     var body: some View {
         content
@@ -85,10 +90,12 @@ struct RankedAlternativesView: View {
                 }
             }
             .onChange(of: state) { _, newState in
+                showsMoreResults = false
                 switch newState {
                 case .results(let list):
                     if let best = list.first {
-                        UIAccessibility.post(notification: .announcement, argument: "\(list.count) alternatives found. Best match: \(best.place.name).")
+                        let visible = min(list.count, Self.initiallyShown)
+                        UIAccessibility.post(notification: .announcement, argument: "\(visible) alternatives found. Best match: \(best.place.name).")
                     }
                 case .empty:
                     UIAccessibility.post(notification: .announcement, argument: "No activities match these filters.")
@@ -105,7 +112,7 @@ struct RankedAlternativesView: View {
 
     private var title: String {
         switch state {
-        case .results(let list): list.count == 3 ? "Top 3 alternatives" : "Top alternatives"
+        case .results(let list): list.count >= Self.initiallyShown ? "Top 3 alternatives" : "Top alternatives"
         default: "Alternatives"
         }
     }
@@ -138,11 +145,13 @@ struct RankedAlternativesView: View {
     }
 
     private func resultsList(_ alternatives: [RankedAlternative]) -> some View {
-        ScrollView {
+        let hiddenCount = max(0, alternatives.count - Self.initiallyShown)
+        let shown = showsMoreResults ? alternatives : Array(alternatives.prefix(Self.initiallyShown))
+        return ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 if showsLocationBanner { LocationOffBanner() }
                 header
-                ForEach(alternatives) { alternative in
+                ForEach(shown) { alternative in
                     AlternativeCardView(
                         alternative: alternative,
                         isSaved: savedIds.contains(alternative.place.id),
@@ -150,6 +159,9 @@ struct RankedAlternativesView: View {
                         onBookmark: { onBookmark(alternative) },
                         onReplace: { replacementTarget = alternative.place }
                     )
+                }
+                if hiddenCount > 0 && !showsMoreResults {
+                    seeMoreButton(hiddenCount: hiddenCount)
                 }
                 Text(originFootnote)
                     .font(.footnote)
@@ -162,6 +174,24 @@ struct RankedAlternativesView: View {
             .padding(.bottom, 16)
             .readableContentWidth()
         }
+    }
+
+    /// Reveals results #4 onwards in place, in the same compact style as #2 and #3.
+    private func seeMoreButton(hiddenCount: Int) -> some View {
+        Button {
+            showsMoreResults = true
+            UIAccessibility.post(notification: .announcement, argument: "\(Self.initiallyShown + hiddenCount) alternatives shown.")
+        } label: {
+            Label("See more options", systemImage: "chevron.down")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(AppColors.actionText)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("See \(hiddenCount) more \(hiddenCount == 1 ? "option" : "options")")
     }
 
     /// "Instead of Taronga Zoo" + one-line filter summary, with "Adjust filters" on the right.

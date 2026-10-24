@@ -32,12 +32,12 @@ nonisolated extension DistanceOption {
 }
 
 nonisolated extension DurationOption {
-    /// Visit-length bucket in minutes. Buckets do not overlap:
-    /// under 1 hr = up to 60, 1–2 hrs = 61–120, half day = over 120.
+    /// Visit-length bucket in minutes: under 1 hr = up to 60, 1–2 hrs = 45–120, half day = over 120.
+    /// 1–2 hrs deliberately overlaps under 1 hr from 45 to 60, so shorter indoor visits still show up.
     func allows(minutes: Int) -> Bool {
         switch self {
         case .underOneHour: minutes <= 60
-        case .oneToTwoHours: minutes > 60 && minutes <= 120
+        case .oneToTwoHours: minutes >= 45 && minutes <= 120
         case .halfDay: minutes > 120
         }
     }

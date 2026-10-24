@@ -9,9 +9,9 @@
 
 import Foundation
 
-/// One of the top 3 recommended places (M2-03).
+/// One of up to 8 recommended places (M2-03): the top 3, then more behind "See more options".
 nonisolated struct RankedAlternative: Identifiable, Hashable, Sendable {
-    /// 1, 2 or 3 (1 = best match).
+    /// 1...8 (1 = best match).
     let rank: Int
     let place: Place
     /// Straight-line distance from the search origin. `nil` when no trustworthy origin exists.
