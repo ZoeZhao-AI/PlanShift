@@ -14,6 +14,10 @@ nonisolated enum DomainError: LocalizedError, Equatable, Sendable {
     case duplicateBackup
     case locationDenied
     case persistenceFailure
+    case replacementCleanupFailed(
+        updateFailure: String,
+        cleanupFailure: String
+    )
 
     var errorDescription: String? {
         switch self {
@@ -26,6 +30,7 @@ nonisolated enum DomainError: LocalizedError, Equatable, Sendable {
         case .duplicateBackup: "This place is already saved as a backup."
         case .locationDenied: "Location access is off. You can turn it on in Settings."
         case .persistenceFailure: "Your data could not be saved. Please try again."
+        case .replacementCleanupFailed: "The activity could not be replaced, and its backup could not be removed. Please try again."
         }
     }
 }

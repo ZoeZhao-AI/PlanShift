@@ -58,12 +58,14 @@
 		9B7DAA7F307F55A50018BFE5 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		9B7DAA81307F55A50018BFE5 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		9B7DAA94307F56620018BFE5 /* PlanShiftWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PlanShiftWidgetExtension.entitlements; sourceTree = "<group>"; };
+		C6700F00307FAC9F00B6B3DB /* PlanShift.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = PlanShift.xctestplan; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
 		9B7DAA8E307F55A70018BFE5 /* Exceptions for "PlanShiftWidget" folder in "PlanShiftWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Assets.xcassets,
 				Info.plist,
 			);
 			target = 9B7DAA7C307F55A50018BFE5 /* PlanShiftWidgetExtension */;
@@ -75,6 +77,28 @@
 			);
 			target = 9B7DAA4E307F52FE0018BFE5 /* PlanShift */;
 		};
+		A51D74013085000000000001 /* Exceptions for "PlanShift" folder in "PlanShiftWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Assets.xcassets,
+				Features/M5_Settings/UseCases/GetWidgetTimeline.swift,
+				Features/M5_Settings/Widget/WidgetActivityLink.swift,
+				Features/M5_Settings/Widget/WidgetActivityTimeline.swift,
+				Shared/Data/Persistence/PersistenceController.swift,
+				Shared/Data/Persistence/PlanShiftModel.xcdatamodeld,
+				Shared/Data/Repositories/BackupEntity.swift,
+				Shared/Data/Repositories/CoreDataActivityRepository.swift,
+				Shared/Data/Repositories/CoreDataTripRepository.swift,
+				Shared/DesignSystem/AppColors.swift,
+				Shared/Domain/Errors/DomainError.swift,
+				Shared/Domain/Models/ActivitySetting.swift,
+				Shared/Domain/Models/ItineraryActivity.swift,
+				Shared/Domain/Models/Trip.swift,
+				Shared/Domain/Repositories/ActivityRepository.swift,
+				Shared/Domain/Repositories/TripRepository.swift,
+			);
+			target = 9B7DAA7C307F55A50018BFE5 /* PlanShiftWidgetExtension */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -82,6 +106,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				9B7DABD9307F5E0A0018BFE5 /* Exceptions for "PlanShift" folder in "PlanShift" target */,
+				A51D74013085000000000001 /* Exceptions for "PlanShift" folder in "PlanShiftWidgetExtension" target */,
 			);
 			path = PlanShift;
 			sourceTree = "<group>";
@@ -143,6 +168,7 @@
 		9B7DAA46307F52FE0018BFE5 = {
 			isa = PBXGroup;
 			children = (
+				C6700F00307FAC9F00B6B3DB /* PlanShift.xctestplan */,
 				9B7DAA94307F56620018BFE5 /* PlanShiftWidgetExtension.entitlements */,
 				9B7DAA51307F52FE0018BFE5 /* PlanShift */,
 				9B7DAA5F307F53010018BFE5 /* PlanShiftTests */,
@@ -676,7 +702,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = PlanShiftWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -708,7 +734,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = PlanShiftWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;

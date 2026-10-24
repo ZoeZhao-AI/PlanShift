@@ -1,84 +1,65 @@
-//
-//  PlanShiftWidget.swift
-//  PlanShiftWidget
-//
-//  Created by Alex W on 14/10/2026.
-//
-
-import WidgetKit
 import SwiftUI
+import WidgetKit
 
-struct Provider: TimelineProvider {
-    func placeholder(in context: Context) -> SimpleEntry {
-        SimpleEntry(date: Date(), emoji: "😀")
+extension WidgetActivityTimeline.Entry: TimelineEntry {}
+
+struct NextActivityProvider: TimelineProvider {
+    typealias Entry = WidgetActivityTimeline.Entry
+
+    func placeholder(in context: Context) -> Entry {
+        Entry(date: .now, state: .empty)
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
-        let entry = SimpleEntry(date: Date(), emoji: "😀")
-        completion(entry)
-    }
-
-    func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
-        var entries: [SimpleEntry] = []
-
-        // Generate a timeline consisting of five entries an hour apart, starting from the current date.
-        let currentDate = Date()
-        for hourOffset in 0 ..< 5 {
-            let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: currentDate)!
-            let entry = SimpleEntry(date: entryDate, emoji: "😀")
-            entries.append(entry)
+    func getSnapshot(in context: Context, completion: @escaping (Entry) -> Void) {
+        load { timeline in
+            completion(timeline.entries[0])
         }
-
-        let timeline = Timeline(entries: entries, policy: .atEnd)
-        completion(timeline)
     }
 
-//    func relevances() async -> WidgetRelevances<Void> {
-//        // Generate a list containing the contexts this widget is relevant in.
-//    }
-}
+    func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> Void) {
+        load { timeline in
+            completion(Timeline(entries: timeline.entries, policy: .after(timeline.reloadAfter)))
+        }
+    }
 
-struct SimpleEntry: TimelineEntry {
-    let date: Date
-    let emoji: String
-}
-
-struct PlanShiftWidgetEntryView : View {
-    var entry: Provider.Entry
-
-    var body: some View {
-        VStack {
-            Text("Time:")
-            Text(entry.date, style: .time)
-
-            Text("Emoji:")
-            Text(entry.emoji)
+    private func load(completion: @escaping (WidgetActivityTimeline) -> Void) {
+        Task { @MainActor in
+            do {
+                let persistence = try PersistenceController()
+                let loader = GetWidgetTimeline(
+                    trips: CoreDataTripRepository(container: persistence.container),
+                    activities: CoreDataActivityRepository(container: persistence.container)
+                )
+                completion(try await loader.execute())
+            } catch {
+                completion(.unavailable(now: .now))
+            }
         }
     }
 }
 
 struct PlanShiftWidget: Widget {
-    let kind: String = "PlanShiftWidget"
+    let kind = WidgetActivityTimeline.widgetKind
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: Provider()) { entry in
-            if #available(iOS 17.0, *) {
-                PlanShiftWidgetEntryView(entry: entry)
-                    .containerBackground(.fill.tertiary, for: .widget)
-            } else {
-                PlanShiftWidgetEntryView(entry: entry)
-                    .padding()
-                    .background()
-            }
+        StaticConfiguration(kind: kind, provider: NextActivityProvider()) { entry in
+            PlanShiftWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName("My Widget")
-        .description("This is an example widget.")
+        .configurationDisplayName("Next activity")
+        .description("See your next planned activity and tap to open its details.")
+        .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular])
     }
 }
 
-#Preview(as: .systemSmall) {
-    PlanShiftWidget()
-} timeline: {
-    SimpleEntry(date: .now, emoji: "😀")
-    SimpleEntry(date: .now, emoji: "🤩")
+struct PlanShiftWidgetEntryView: View {
+    let entry: WidgetActivityTimeline.Entry
+    @Environment(\.widgetFamily) private var family
+    @Environment(\.widgetRenderingMode) private var renderingMode
+
+    var body: some View {
+        NextActivityWidgetView(entry: entry, family: family, renderingMode: renderingMode)
+            .containerBackground(for: .widget) {
+                AppColors.backgroundGradient
+            }
+    }
 }

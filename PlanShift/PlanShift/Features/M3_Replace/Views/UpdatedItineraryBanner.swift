@@ -1,28 +1,41 @@
-// Module: M3 – placeholder for M3-02 Updated Itinerary Banner.
+// Module: M3 – M3-02 Updated Itinerary Banner, shown as a temporary toast.
 
 import SwiftUI
+import UIKit
 
-/// M3-02 Updated Itinerary Banner (shown at the bottom of M1-01 after a replace).
-/// Placeholder: the M3 owner replaces this with the real banner.
 struct UpdatedItineraryBanner: View {
+    private static let visibleDuration: Duration = .seconds(6)
+
     @Environment(AppRouter.self) private var router
+    @Environment(ReplaceViewModel.self) private var viewModel
 
     var body: some View {
-        VStack(spacing: 8) {
-            Text("M3-02").font(.largeTitle.bold())
-            Text("Updated Itinerary Banner").font(.title2)
-            Button("Undo") { router.showsUpdatedItineraryBanner = false }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
+        UpdatedItineraryBannerContent(
+            viewModel: viewModel,
+            onUndone: hide,
+            onClose: hide
+        )
+        .task(id: viewModel.replacementName) {
+            await hideAfterDelay()
         }
-        .foregroundStyle(AppColors.textPrimary)
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(.regularMaterial)
     }
-}
 
-#Preview {
-    UpdatedItineraryBanner()
-        .environment(AppRouter())
+    /// Hides the toast after a few seconds. With VoiceOver running it stays until closed,
+    /// so there is time to reach Undo. It also stays while an undo is running or its error is shown.
+    private func hideAfterDelay() async {
+        guard !UIAccessibility.isVoiceOverRunning else { return }
+        do {
+            try await Task.sleep(for: Self.visibleDuration)
+        } catch {
+            return
+        }
+        guard !viewModel.isProcessing, viewModel.errorMessage == nil else { return }
+        hide()
+    }
+
+    private func hide() {
+        withAnimation(.easeOut(duration: 0.3)) {
+            router.showsUpdatedItineraryBanner = false
+        }
+    }
 }
