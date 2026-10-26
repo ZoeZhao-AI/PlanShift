@@ -17,6 +17,7 @@ This branch contains only the **shared foundation** (domain models, errors, repo
   <img src="Screenshots/04-top-alternatives.png" width="200">
   <img src="Screenshots/05-backups.png" width="200">
   <img src="Screenshots/06-backups-dark.png" width="200">
+  <img src="Screenshots/07-widget.png" width="200">
 </p>
 
 ## Architecture
