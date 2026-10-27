@@ -97,7 +97,7 @@ PlanShift/
 | Foundation | Project setup, shared domain models, repository protocols, App Group, URL scheme | Ziying Zhao |
 | M1 | Itinerary | Qihao Lin |
 | M2 | Recommendations | Van Dao Le |
-| M3 | Replace | Yu-Sheng Chang |
+| M3 | Replace | Chia-Ming Chang |
 | M4 | Backups | Ziying Zhao |
 | M5 | Widget, location and settings | Sam Chang |
 
