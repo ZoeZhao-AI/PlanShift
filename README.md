@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="Screenshots/app-icon.png" width="160" alt="PlanShift app icon">
+</p>
+
 # PlanShift
 
 **Backup plans when trips change.**
