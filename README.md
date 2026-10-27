@@ -99,7 +99,7 @@ PlanShift/
 | M2 | Recommendations | Van Dao Le |
 | M3 | Replace | Chia-Ming Chang |
 | M4 | Backups | Ziying Zhao |
-| M5 | Widget, location and settings | Sam Chang |
+| M5 | Widget, location and settings | Yu-Sheng (Sam) Chang |
 
 ---
 
