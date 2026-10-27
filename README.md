@@ -1,5 +1,7 @@
 <p align="center">
   <img src="Screenshots/app-icon.png" width="160" alt="PlanShift app icon">
+  <br>
+  <sub>App icon: 1024 × 1024 px PNG, no transparency, no pre-rounded corners (iOS applies the corner mask)</sub>
 </p>
 
 # PlanShift
