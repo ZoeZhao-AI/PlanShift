@@ -17,13 +17,13 @@ UTS 40005 Advanced iOS Applications, Assessment 4 (team of 5). iOS 17.6+, SwiftU
 ## Screenshots
 
 <p>
-  <img src="Screenshots/01-itinerary.png" width="200">
-  <img src="Screenshots/02-activity-detail.png" width="200">
-  <img src="Screenshots/03-plan-changed.png" width="200">
-  <img src="Screenshots/04-top-alternatives.png" width="200">
-  <img src="Screenshots/05-backups.png" width="200">
-  <img src="Screenshots/06-backups-dark.png" width="200">
-  <img src="Screenshots/07-widget.png" width="200">
+  <img src="Screenshots/01-itinerary.png" width="200" alt="Plan your Sydney itinerary in one place">
+  <img src="Screenshots/02-activity-detail.png" width="200" alt="View the time, cost and place for your next activity">
+  <img src="Screenshots/03-plan-changed.png" width="200" alt="Choose what changed and find alternative activities">
+  <img src="Screenshots/04-top-alternatives.png" width="200" alt="Compare recommended alternatives for your day">
+  <img src="Screenshots/05-backups.png" width="200" alt="Keep saved alternatives organised by trip day">
+  <img src="Screenshots/06-backups-dark.png" width="200" alt="View your saved backups in Dark Mode">
+  <img src="Screenshots/07-widget.png" width="200" alt="See your next activity in the Home Screen widget">
 </p>
 
 ---
