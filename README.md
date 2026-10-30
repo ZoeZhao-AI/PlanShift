@@ -17,14 +17,16 @@ UTS 40005 Advanced iOS Applications, Assessment 4 (team of 5). iOS 17.6+, SwiftU
 ## Screenshots
 
 <p>
-  <img src="Screenshots/01-itinerary.png" width="200">
-  <img src="Screenshots/02-activity-detail.png" width="200">
-  <img src="Screenshots/03-plan-changed.png" width="200">
-  <img src="Screenshots/04-top-alternatives.png" width="200">
-  <img src="Screenshots/05-backups.png" width="200">
-  <img src="Screenshots/06-backups-dark.png" width="200">
-  <img src="Screenshots/07-widget.png" width="200">
+  <img src="AppStore/01-itinerary.png" width="240">
+  <img src="AppStore/02-activity.png" width="240">
+  <img src="AppStore/03-change.png" width="240">
+  <img src="AppStore/04-alternatives.png" width="240">
+  <img src="AppStore/05-backups.png" width="240">
+  <img src="AppStore/06-dark.png" width="240">
+  <img src="AppStore/07-widget.png" width="240">
 </p>
+
+App Store screenshots, 1320 × 2868 px for the 6.9-inch display. The original simulator screenshots are in the [Screenshots](Screenshots) folder.
 
 ---
 
